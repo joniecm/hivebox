@@ -11,8 +11,7 @@
   </a>
 </p>
 
-> [!CAUTION]
-> **[Fork](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork)** this repo, and create PRs in your fork, **NOT** in this repo!
+> [!CAUTION] > **[Fork](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork)** this repo, and create PRs in your fork, **NOT** in this repo!
 
 > [!TIP]
 > If you are looking for the full roadmap, including this project, go back to the [getting started](https://devopsroadmap.io/getting-started) page.
@@ -52,4 +51,27 @@ Here is a pre-start checklist:
 
 ## Implementation
 
-** ADD YOUR IMPLEMENTATION DOCUMENTATION HERE **
+## Versioning
+
+This project follows Semantic Versioning 2.0.0 (https://semver.org).
+
+- Version numbers are stored in `package.json`
+- Releases are tagged as `vMAJOR.MINOR.PATCH`
+- Breaking changes increment MAJOR
+- New features increment MINOR
+- Bug fixes increment PATCH
+
+## How to run
+
+Use commands:
+
+```
+npm install
+npm start
+```
+
+Or run directly with Node:
+
+```
+node index.js
+```
