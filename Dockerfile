@@ -1,7 +1,7 @@
-FROM node:20-alpine
+FROM python:3.11-alpine
 
 WORKDIR /app
 
 COPY . .
 
-CMD node index.js
+CMD ["python", "app.py"]

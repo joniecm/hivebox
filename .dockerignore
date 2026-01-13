@@ -1,0 +1,27 @@
+# Don't send git metadata into the image
+.git
+
+# Ignore local config and secrets
+.env
+.venv
+venv
+env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Build artifacts
+build/
+dist/
+*.egg-info
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Avoid copying the Dockerfile and local gitignore
+Dockerfile
+.gitignore
