@@ -55,7 +55,7 @@ Here is a pre-start checklist:
 
 This project follows Semantic Versioning 2.0.0 (https://semver.org).
 
-- Version numbers are stored in `package.json`
+- Version numbers are stored in `version.py`
 - Releases are tagged as `vMAJOR.MINOR.PATCH`
 - Breaking changes increment MAJOR
 - New features increment MINOR
@@ -63,31 +63,24 @@ This project follows Semantic Versioning 2.0.0 (https://semver.org).
 
 ## How to run locally
 
-Use commands:
+Run the Python app which prints the project version:
 
 ```
-npm install
-npm start
-```
-
-Or run directly with Node:
-
-```
-node index.js
+python app.py
 ```
 
 ## How to run using Docker
 
-This repository includes a `Dockerfile` that runs the Node.js app.
+This repository includes a `Dockerfile` that runs the Python app which prints the project version.
 
 Build the image:
 
 ```
-docker build -t devops-hivebox:latest .
+docker build -t hivebox:latest .
 ```
 
 Run the container:
 
 ```
-docker run --rm devops-hivebox:latest
+docker run --rm hivebox:latest
 ```
