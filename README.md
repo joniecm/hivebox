@@ -61,17 +61,65 @@ This project follows Semantic Versioning 2.0.0 (https://semver.org).
 - New features increment MINOR
 - Bug fixes increment PATCH
 
+## API Endpoints
+
+### GET /version
+
+Returns the version of the currently deployed application.
+
+**Parameters:** None
+
+**Response:**
+```json
+{
+  "version": "v0.0.1"
+}
+```
+
+**Example:**
+```bash
+curl http://localhost:5000/version
+```
+
 ## How to run locally
 
-Run the Python app which prints the project version:
+### Install dependencies
 
+```bash
+pip install -r requirements.txt
 ```
+
+### Run as web server
+
+Run the Flask web application:
+
+```bash
 python app.py
+```
+
+The server will start on `http://0.0.0.0:5000`. You can then access the `/version` endpoint:
+
+```bash
+curl http://localhost:5000/version
+```
+
+### Run as CLI (print version)
+
+To print the version and exit:
+
+```bash
+python app.py --version
+```
+
+### Run tests
+
+```bash
+python -m unittest test_app.py -v
 ```
 
 ## How to run using Docker
 
-This repository includes a `Dockerfile` that runs the Python app which prints the project version.
+This repository includes a `Dockerfile` that runs the Flask web application.
 
 Build the image:
 
@@ -82,5 +130,11 @@ docker build -t hivebox:latest .
 Run the container:
 
 ```
-docker run --rm hivebox:latest
+docker run --rm -p 5000:5000 hivebox:latest
+```
+
+Then access the version endpoint:
+
+```bash
+curl http://localhost:5000/version
 ```

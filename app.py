@@ -1,5 +1,18 @@
 from version import VERSION
 import sys
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+@app.route('/version', methods=['GET'])
+def version():
+    """Return the version of the deployed app.
+    
+    Returns:
+        JSON response with version field containing the app version.
+    """
+    return jsonify({"version": VERSION})
 
 
 def print_version() -> None:
@@ -16,4 +29,9 @@ def print_version() -> None:
 
 
 if __name__ == "__main__":
-    print_version()
+    # Check if running in CLI mode (--version flag) or web server mode
+    if len(sys.argv) > 1 and sys.argv[1] == "--version":
+        print_version()
+    else:
+        # Run the Flask web server
+        app.run(host='0.0.0.0', port=5000)
