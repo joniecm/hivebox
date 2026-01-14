@@ -51,7 +51,7 @@ Here is a pre-start checklist:
 
 ## Implementation
 
-## Versioning
+### Versioning
 
 This project follows Semantic Versioning 2.0.0 (https://semver.org).
 
@@ -61,15 +61,16 @@ This project follows Semantic Versioning 2.0.0 (https://semver.org).
 - New features increment MINOR
 - Bug fixes increment PATCH
 
-## API Endpoints
+### API Endpoints
 
-### GET /version
+#### GET /version
 
 Returns the version of the currently deployed application.
 
 **Parameters:** None
 
 **Response:**
+
 ```json
 {
   "version": "v0.0.1"
@@ -77,19 +78,20 @@ Returns the version of the currently deployed application.
 ```
 
 **Example:**
+
 ```bash
 curl http://localhost:5000/version
 ```
 
-## How to run locally
+### How to run locally
 
-### Install dependencies
+#### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run as web server
+#### Run as web server
 
 Run the Flask web application:
 
@@ -103,7 +105,7 @@ The server will start on `http://0.0.0.0:5000`. You can then access the `/versio
 curl http://localhost:5000/version
 ```
 
-### Run as CLI (print version)
+#### Run as CLI (print version)
 
 To print the version and exit:
 
@@ -111,13 +113,13 @@ To print the version and exit:
 python app.py --version
 ```
 
-### Run tests
+#### Run tests
 
 ```bash
 python -m unittest test_app.py -v
 ```
 
-## How to run using Docker
+### How to run using Docker
 
 This repository includes a `Dockerfile` that runs the Flask web application.
 
