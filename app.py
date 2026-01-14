@@ -1,6 +1,7 @@
 from version import VERSION
 import sys
 from flask import Flask, jsonify
+from sensebox_service import get_average_temperature
 
 app = Flask(__name__)
 
@@ -13,6 +14,27 @@ def version():
         JSON response with version field containing the app version.
     """
     return jsonify({"version": VERSION})
+
+
+@app.route('/temperature', methods=['GET'])
+def temperature():
+    """Return the current average temperature from all senseBoxes.
+    
+    Fetches temperature data from configured senseBoxes and returns
+    the average value. Only includes data from the last hour.
+    
+    Returns:
+        JSON response with average_temperature field, or error message.
+    """
+    avg_temp = get_average_temperature()
+    
+    if avg_temp is None:
+        return jsonify({
+            "error": "No temperature data available",
+            "message": "Unable to retrieve fresh temperature data from senseBoxes. Data may be unavailable or older than 1 hour."
+        }), 503
+    
+    return jsonify({"average_temperature": round(avg_temp, 2)})
 
 
 def print_version() -> None:
