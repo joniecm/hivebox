@@ -29,10 +29,7 @@ def print_version() -> None:
 
 
 if __name__ == "__main__":
-    # Check if running in CLI mode (--version flag) or web server mode
     if len(sys.argv) > 1 and sys.argv[1] == "--version":
         print_version()
     else:
-        # Run the Flask web server
-        # Note: In production, use a WSGI server like gunicorn or uwsgi
         app.run(host='0.0.0.0', port=5000)
