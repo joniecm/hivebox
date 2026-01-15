@@ -6,7 +6,7 @@ from app import app, VERSION
 from sensebox_service import (
     extract_temperature_value,
     is_data_fresh,
-    get_average_temperature
+    get_average_temperature_for_fresh_data
 )
 
 
@@ -53,21 +53,21 @@ class TestTemperatureEndpoint(unittest.TestCase):
         self.client = self.app.test_client()
         self.app.testing = True
     
-    @patch('app.get_average_temperature')
+    @patch('app.get_average_temperature_for_fresh_data')
     def test_temperature_endpoint_exists(self, mock_get_avg):
         """Test that /temperature endpoint exists."""
         mock_get_avg.return_value = 20.5
         response = self.client.get('/temperature')
         self.assertIn(response.status_code, [200, 503])
     
-    @patch('app.get_average_temperature')
+    @patch('app.get_average_temperature_for_fresh_data')
     def test_temperature_endpoint_returns_json(self, mock_get_avg):
         """Test that /temperature endpoint returns JSON."""
         mock_get_avg.return_value = 20.5
         response = self.client.get('/temperature')
         self.assertEqual(response.content_type, 'application/json')
     
-    @patch('app.get_average_temperature')
+    @patch('app.get_average_temperature_for_fresh_data')
     def test_temperature_endpoint_success(self, mock_get_avg):
         """Test successful temperature retrieval."""
         mock_get_avg.return_value = 22.456
@@ -77,7 +77,7 @@ class TestTemperatureEndpoint(unittest.TestCase):
         self.assertIn('average_temperature', data)
         self.assertEqual(data['average_temperature'], 22.46)  # Rounded to 2 decimals
     
-    @patch('app.get_average_temperature')
+    @patch('app.get_average_temperature_for_fresh_data')
     def test_temperature_endpoint_no_data(self, mock_get_avg):
         """Test error response when no data is available."""
         mock_get_avg.return_value = None
@@ -87,7 +87,7 @@ class TestTemperatureEndpoint(unittest.TestCase):
         self.assertIn('error', data)
         self.assertIn('message', data)
     
-    @patch('app.get_average_temperature')
+    @patch('app.get_average_temperature_for_fresh_data')
     def test_temperature_endpoint_rounds_correctly(self, mock_get_avg):
         """Test that temperature is rounded to 2 decimal places."""
         mock_get_avg.return_value = 18.999
@@ -196,7 +196,7 @@ class TestSenseboxService(unittest.TestCase):
             }
         ]
         
-        avg = get_average_temperature(["box1", "box2", "box3"])
+        avg = get_average_temperature_for_fresh_data(["box1", "box2", "box3"])
         self.assertEqual(avg, 22.0)
     
     @patch('sensebox_service.get_sensebox_data')
@@ -204,7 +204,7 @@ class TestSenseboxService(unittest.TestCase):
         """Test average calculation when no data is available."""
         mock_get_data.return_value = None
         
-        avg = get_average_temperature(["box1"])
+        avg = get_average_temperature_for_fresh_data(["box1"])
         self.assertIsNone(avg)
     
     @patch('sensebox_service.get_sensebox_data')
@@ -221,7 +221,7 @@ class TestSenseboxService(unittest.TestCase):
             }]
         }
         
-        avg = get_average_temperature(["box1"])
+        avg = get_average_temperature_for_fresh_data(["box1"])
         self.assertIsNone(avg)
 
 

@@ -7,9 +7,9 @@ from typing import List, Dict, Optional, Any
 
 # List of senseBox IDs to fetch temperature data from
 SENSEBOX_IDS = [
-    "5eba5fbad46fb8001b799786",
-    "5c21ff8f919bf8001adf2488",
-    "5ade1acf223bd80019a1011c"
+    "5c647389a100840019eea656",
+    "66268770eaca630008ec4f9e",
+    "6570eb180db9850007f21abe"
 ]
 
 OPENSENSEMAP_API_BASE = "https://api.opensensemap.org"
@@ -27,7 +27,7 @@ def get_sensebox_data(box_id: str) -> Optional[Dict]:
     """
     try:
         url = f"{OPENSENSEMAP_API_BASE}/boxes/{box_id}"
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=2)
         response.raise_for_status()
         return response.json()
     except (requests.RequestException, ValueError):
@@ -47,7 +47,6 @@ def extract_temperature_value(box_data: Dict) -> Optional[Dict[str, Any]]:
         return None
     
     for sensor in box_data.get("sensors", []):
-        # Look for temperature sensor
         if sensor.get("title") == TEMPERATURE_SENSOR_PHENOMENON:
             last_measurement = sensor.get("lastMeasurement")
             if last_measurement:
@@ -77,7 +76,7 @@ def is_data_fresh(timestamp: datetime, max_age_hours: int = 1) -> bool:
     return (now - timestamp) <= max_age
 
 
-def get_average_temperature(box_ids: List[str] = None) -> Optional[float]:
+def get_average_temperature_for_fresh_data(box_ids: List[str] = None) -> Optional[float]:
     """Calculate average temperature from multiple senseBoxes.
     
     Fetches temperature data from all specified senseBoxes and returns
@@ -99,7 +98,6 @@ def get_average_temperature(box_ids: List[str] = None) -> Optional[float]:
         if box_data:
             temp_data = extract_temperature_value(box_data)
             if temp_data:
-                # Only include fresh data (within 1 hour)
                 if is_data_fresh(temp_data["timestamp"]):
                     temperatures.append(temp_data["value"])
     

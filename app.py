@@ -1,7 +1,7 @@
 from version import VERSION
 import sys
 from flask import Flask, jsonify
-from sensebox_service import get_average_temperature
+from sensebox_service import get_average_temperature_for_fresh_data
 
 app = Flask(__name__)
 
@@ -26,7 +26,7 @@ def temperature():
     Returns:
         JSON response with average_temperature field, or error message.
     """
-    avg_temp = get_average_temperature()
+    avg_temp = get_average_temperature_for_fresh_data()
     
     if avg_temp is None:
         return jsonify({
