@@ -179,12 +179,6 @@ pip install flake8==7.3.0
 ```bash
 # Check all Python files
 flake8 .
-
-# Check specific files
-flake8 app.py sensebox_service.py
-
-# Show detailed statistics
-flake8 --statistics --show-source
 ```
 
 **Auto-fix issues:**
@@ -204,14 +198,6 @@ autopep8 --in-place --recursive .
 # Or use ruff (modern, fast)
 ruff check --fix .
 ```
-
-#### Dockerfile Linting with hadolint
-
-**hadolint** validates Dockerfile best practices and common mistakes.
-
-**CI/CD Integration:**
-
-The GitHub Actions workflow (`.github/workflows/default.yml`) automatically runs both linters on every push and pull request to ensure code quality.
 
 ### How to run using Docker
 
