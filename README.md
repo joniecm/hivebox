@@ -220,3 +220,10 @@ Then access the version endpoint:
 ```bash
 curl http://localhost:5000/version
 ```
+
+#### Basic API Tests
+
+The CI pipeline validates the `/version` endpoint response against the
+`VERSION` constant in `version.py`. The expected value is derived directly
+from that constant for the current build. If the endpoint returns a different
+value, the CI job fails.
