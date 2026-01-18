@@ -37,13 +37,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v2.3.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: ./Dockerfile
 
   test:
     runs-on: ubuntu-latest
-    name: Run Tests
+    name: Unit Tests
     steps:
       - name: Check out source repository
         uses: actions/checkout@v4
