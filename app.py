@@ -9,7 +9,7 @@ app = Flask(__name__)
 @app.route('/version', methods=['GET'])
 def version():
     """Return the version of the deployed app.
-    
+
     Returns:
         JSON response with version field containing the app version.
     """
@@ -19,21 +19,24 @@ def version():
 @app.route('/temperature', methods=['GET'])
 def temperature():
     """Return the current average temperature from all senseBoxes.
-    
+
     Fetches temperature data from configured senseBoxes and returns
     the average value. Only includes data from the last hour.
-    
+
     Returns:
         JSON response with average_temperature field, or error message.
     """
     avg_temp = get_average_temperature_for_fresh_data()
-    
+
     if avg_temp is None:
         return jsonify({
             "error": "No temperature data available",
-            "message": "Unable to retrieve fresh temperature data from senseBoxes. Data may be unavailable or older than 1 hour."
+            "message": (
+                "Unable to retrieve fresh temperature data from "
+                "senseBoxes. Data may be unavailable or older than 1 hour."
+            )
         }), 503
-    
+
     return jsonify({"average_temperature": round(avg_temp, 2)})
 
 
