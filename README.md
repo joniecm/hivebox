@@ -107,10 +107,12 @@ Returns the current average temperature across all configured senseBoxes.
 ```
 
 **Status Codes:**
+
 - `200 OK`: Temperature data retrieved successfully
 - `503 Service Unavailable`: No fresh temperature data available
 
 **Notes:**
+
 - Only includes temperature data from the last hour
 - Temperature is rounded to 2 decimal places
 - Fetches data from openSenseMap API (https://api.opensensemap.org)
@@ -157,6 +159,59 @@ python app.py --version
 ```bash
 python -m unittest test_app.py -v
 ```
+
+### Code Quality & Linting
+
+This project uses automated linting tools to maintain code quality and consistency.
+
+#### Python Linting with flake8
+
+**flake8** checks Python code for style violations and programming errors.
+
+**Install:**
+
+```bash
+pip install flake8==7.3.0
+```
+
+**Run locally:**
+
+```bash
+# Check all Python files
+flake8 .
+
+# Check specific files
+flake8 app.py sensebox_service.py
+
+# Show detailed statistics
+flake8 --statistics --show-source
+```
+
+**Auto-fix issues:**
+
+flake8 only reports issues. Use these tools to automatically fix them:
+
+```bash
+# Install auto-formatting tools
+pip install black autopep8 ruff
+
+# Format code with black
+black .
+
+# Fix common issues with autopep8
+autopep8 --in-place --recursive .
+
+# Or use ruff (modern, fast)
+ruff check --fix .
+```
+
+#### Dockerfile Linting with hadolint
+
+**hadolint** validates Dockerfile best practices and common mistakes.
+
+**CI/CD Integration:**
+
+The GitHub Actions workflow (`.github/workflows/default.yml`) automatically runs both linters on every push and pull request to ensure code quality.
 
 ### How to run using Docker
 
