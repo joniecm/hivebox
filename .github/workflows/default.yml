@@ -85,19 +85,20 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Validate if api works (/version check)
+      - name: Validate if API works (/version check)
         run: |
           python app.py &
           echo $! > app.pid
           sleep 3 # give the app some time to start
+          success=false
           for i in {1..10}; do
-            if curl -sSf http://127.0.0.1:5000/; then
+            if curl -sSf http://127.0.0.1:5000/version > /tmp/version.json; then
+              success=true
               break
             fi
             sleep 1
           done
-
-          if ! curl -sSf http://127.0.0.1:5000/version > /tmp/version.json; then
+          if [ "$success" = false ]; then
             echo "Service did not become ready" >&2
             exit 1
           fi
