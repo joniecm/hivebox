@@ -96,6 +96,60 @@ class TestTemperatureEndpoint(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(data['average_temperature'], 19.0)
 
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_too_cold(self, mock_get_avg):
+        """Test status is 'Too Cold' when temperature is less than 10."""
+        mock_get_avg.return_value = 5.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Too Cold')
+
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_good_lower_bound(self, mock_get_avg):
+        """Test status is 'Good' at lower boundary (10)."""
+        mock_get_avg.return_value = 10.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Good')
+
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_good_middle(self, mock_get_avg):
+        """Test status is 'Good' in the middle of range (20)."""
+        mock_get_avg.return_value = 20.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Good')
+
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_good_upper_bound(self, mock_get_avg):
+        """Test status is 'Good' at upper boundary (36)."""
+        mock_get_avg.return_value = 36.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Good')
+
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_too_hot(self, mock_get_avg):
+        """Test status is 'Too Hot' when temperature is more than 36."""
+        mock_get_avg.return_value = 40.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Too Hot')
+
+    @patch('app.get_average_temperature_for_fresh_data')
+    def test_temperature_status_too_hot_boundary(self, mock_get_avg):
+        """Test status is 'Too Hot' at boundary (37, just above 36)."""
+        mock_get_avg.return_value = 37.0
+        response = self.client.get('/temperature')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['status'], 'Too Hot')
+
 
 class TestSenseboxService(unittest.TestCase):
     """Test cases for the sensebox_service module."""

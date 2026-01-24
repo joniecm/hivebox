@@ -16,6 +16,23 @@ def version():
     return jsonify({"version": VERSION})
 
 
+def get_temperature_status(temperature: float) -> str:
+    """Determine temperature status based on the average temperature.
+
+    Args:
+        temperature: The average temperature value.
+
+    Returns:
+        Status string: "Too Cold", "Good", or "Too Hot".
+    """
+    if temperature < 10:
+        return "Too Cold"
+    elif temperature <= 36:
+        return "Good"
+    else:
+        return "Too Hot"
+
+
 @app.route('/temperature', methods=['GET'])
 def temperature():
     """Return the current average temperature from all senseBoxes.
@@ -37,7 +54,10 @@ def temperature():
             )
         }), 503
 
-    return jsonify({"average_temperature": round(avg_temp, 2)})
+    return jsonify({
+        "average_temperature": round(avg_temp, 2),
+        "status": get_temperature_status(avg_temp)
+    })
 
 
 def print_version() -> None:

@@ -93,9 +93,16 @@ Returns the current average temperature across all configured senseBoxes.
 
 ```json
 {
-  "average_temperature": 22.46
+  "average_temperature": 22.46,
+  "status": "Good"
 }
 ```
+
+**Status Field Values:**
+
+- `"Too Cold"`: Average temperature is less than 10°C
+- `"Good"`: Average temperature is between 10°C and 36°C (inclusive)
+- `"Too Hot"`: Average temperature is greater than 36°C
 
 **Response (Error - No Data Available):**
 
