@@ -230,10 +230,10 @@ curl http://localhost:5000/version
 
 ### Local Kubernetes with kind
 
-Create the cluster using the provided config (ports 4080 are mapped for ingress):
+Create the cluster using the provided config (port 4080 is mapped for ingress):
 
 ```bash
-kind create cluster --config .\infra\kind-config.yaml
+kind create cluster --config ./infra/kind-config.yaml
 ```
 
 Get the kubeconfig for the cluster:
@@ -245,7 +245,7 @@ kind get kubeconfig --name hivebox
 Install Ingress-NGINX:
 
 ```bash
-kubectl apply -k .\infra\ingress-nginx
+kubectl apply -k ./infra/ingress-nginx
 ```
 
 Delete the cluster when finished:
