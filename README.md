@@ -248,6 +248,25 @@ Install Ingress-NGINX:
 kubectl apply -k ./infra/ingress-nginx
 ```
 
+Load the locally built image into kind:
+
+```bash
+kind load docker-image hivebox:latest --name hivebox
+```
+
+Deploy the app manifests:
+
+```bash
+kubectl apply -f ./infra/app/
+
+```
+
+Wait until deployment is done (use kubectl to check) and access:
+
+```bash
+curl http://localhost:4080/version
+```
+
 Delete the cluster when finished:
 
 ```bash
