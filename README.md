@@ -131,6 +131,21 @@ Returns the current average temperature across all configured senseBoxes.
 curl http://localhost:5000/temperature
 ```
 
+#### GET /metrics
+
+Exposes Prometheus metrics for the app.
+
+**Metrics:**
+
+- `http_requests_total{method, path, status}` (counter)
+- `http_request_duration_seconds{method, path, status}` (histogram)
+
+**Example:**
+
+```bash
+curl http://localhost:5000/metrics
+```
+
 ### How to run locally
 
 #### Install dependencies

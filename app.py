@@ -1,9 +1,52 @@
-from version import VERSION
 import sys
-from flask import Flask, jsonify
+import time
+
+from flask import Flask, Response, g, jsonify, request
+from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Histogram,
+                               generate_latest)
+
 from sensebox_service import get_average_temperature_for_fresh_data
+from version import VERSION
 
 app = Flask(__name__)
+
+HTTP_REQUESTS_TOTAL = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "path", "status"],
+)
+
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "path", "status"],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+)
+
+
+@app.before_request
+def start_timer():
+    g.start_time = time.perf_counter()
+
+
+@app.after_request
+def record_metrics(response):
+    duration = time.perf_counter() - g.start_time
+    route = request.url_rule.rule if request.url_rule else "unmatched"
+    labels = {
+        "method": request.method,
+        "path": route,
+        "status": str(response.status_code),
+    }
+    HTTP_REQUESTS_TOTAL.labels(**labels).inc()
+    HTTP_REQUEST_DURATION_SECONDS.labels(**labels).observe(duration)
+    return response
+
+
+@app.route('/metrics', methods=['GET'])
+def metrics():
+    """Expose Prometheus metrics."""
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.route('/version', methods=['GET'])
