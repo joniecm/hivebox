@@ -81,7 +81,10 @@ def test_temperature_endpoint_connection_error(client, monkeypatch):
     def fake_get_connection_error(url, timeout):
         raise requests.ConnectionError("Failed to connect")
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get_connection_error)
+    monkeypatch.setattr(
+        "sensebox_service.requests.get",
+        fake_get_connection_error,
+    )
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -263,7 +266,10 @@ def test_temperature_endpoint_stale_data(client, monkeypatch):
 
 @pytest.mark.integration
 def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
-    """Test the temperature endpoint with mixed results: some valid, some failed."""
+    """Test temperature endpoint with mixed results.
+
+    Some senseBoxes return valid data while others fail.
+    """
     from datetime import timedelta
 
     class DummyResponse:
@@ -280,7 +286,7 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
 
     def fake_get(url, timeout):
         box_id = url.rsplit("/", 1)[-1]
-        
+
         # First box: valid fresh data
         if box_id == SENSEBOX_IDS[0]:
             now = datetime.now(timezone.utc).isoformat()
@@ -296,7 +302,7 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
                 ]
             }
             return DummyResponse(payload)
-        
+
         # Second box: stale data (should be ignored)
         elif box_id == SENSEBOX_IDS[1]:
             old_time = datetime.now(timezone.utc) - timedelta(hours=2)
@@ -305,14 +311,15 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
                     {
                         "title": TEMPERATURE_SENSOR_PHENOMENON,
                         "lastMeasurement": {
-                            "value": "100.0",  # High value that would skew average
+                            # High value that would skew average
+                            "value": "100.0",
                             "createdAt": old_time.isoformat(),
                         },
                     }
                 ]
             }
             return DummyResponse(payload)
-        
+
         # Third box: connection error
         else:
             raise requests.ConnectionError("Failed to connect")
@@ -337,19 +344,21 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
     def fake_get(url, timeout):
         box_id = url.rsplit("/", 1)[-1]
         call_count[0] += 1
-        
+
         # First box: timeout
         if box_id == SENSEBOX_IDS[0]:
             raise requests.Timeout("Connection timeout")
-        
+
         # Second box: stale data
         elif box_id == SENSEBOX_IDS[1]:
             old_time = datetime.now(timezone.utc) - timedelta(hours=3)
-            
+
             class DummyResponse:
                 status_code = 200
+
                 def raise_for_status(self):
                     pass
+
                 def json(self):
                     return {
                         "sensors": [
@@ -362,18 +371,20 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
                             }
                         ]
                     }
-            
+
             return DummyResponse()
-        
+
         # Third box: missing sensor data
         else:
             class DummyResponse:
                 status_code = 200
+
                 def raise_for_status(self):
                     pass
+
                 def json(self):
                     return {"sensors": []}
-            
+
             return DummyResponse()
 
     monkeypatch.setattr("sensebox_service.requests.get", fake_get)
