@@ -1,10 +1,24 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import requests
 
 from app import app
 from sensebox_service import SENSEBOX_IDS, TEMPERATURE_SENSOR_PHENOMENON
+
+
+class DummyResponse:
+    """Mock HTTP response for testing."""
+    def __init__(self, payload, status_code=200):
+        self._payload = payload
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"status={self.status_code}")
+
+    def json(self):
+        return self._payload
 
 
 @pytest.fixture()
@@ -22,18 +36,6 @@ def test_temperature_endpoint_integration(client, monkeypatch):
         SENSEBOX_IDS[1]: 22.0,
         SENSEBOX_IDS[2]: 24.0,
     }
-
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            if self.status_code >= 400:
-                raise requests.HTTPError(f"status={self.status_code}")
-
-        def json(self):
-            return self._payload
 
     def fake_get(url, timeout):
         box_id = url.rsplit("/", 1)[-1]
@@ -93,18 +95,9 @@ def test_temperature_endpoint_connection_error(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_http_error(client, monkeypatch):
     """Test the temperature endpoint handles HTTP error responses."""
-    class DummyResponse:
-        def __init__(self, status_code=500):
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            raise requests.HTTPError(f"HTTP {self.status_code}")
-
-        def json(self):
-            return {}
-
     def fake_get_http_error(url, timeout):
-        return DummyResponse(status_code=500)
+        response = DummyResponse({}, status_code=500)
+        return response
 
     monkeypatch.setattr("sensebox_service.requests.get", fake_get_http_error)
 
@@ -118,17 +111,6 @@ def test_temperature_endpoint_http_error(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_missing_sensors(client, monkeypatch):
     """Test the temperature endpoint handles missing sensor data."""
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return self._payload
-
     def fake_get(url, timeout):
         # Return data without sensors field
         payload = {"name": "TestBox"}
@@ -146,17 +128,6 @@ def test_temperature_endpoint_missing_sensors(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_no_temperature_sensor(client, monkeypatch):
     """Test the temperature endpoint handles missing temperature sensor."""
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return self._payload
-
     def fake_get(url, timeout):
         now = datetime.now(timezone.utc).isoformat()
         payload = {
@@ -184,17 +155,6 @@ def test_temperature_endpoint_no_temperature_sensor(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_invalid_temperature_value(client, monkeypatch):
     """Test the temperature endpoint handles invalid temperature values."""
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return self._payload
-
     def fake_get(url, timeout):
         now = datetime.now(timezone.utc).isoformat()
         payload = {
@@ -222,19 +182,6 @@ def test_temperature_endpoint_invalid_temperature_value(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_stale_data(client, monkeypatch):
     """Test the temperature endpoint rejects stale data older than 1 hour."""
-    from datetime import timedelta
-
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return self._payload
-
     def fake_get(url, timeout):
         # Data from 2 hours ago
         old_time = datetime.now(timezone.utc) - timedelta(hours=2)
@@ -264,20 +211,6 @@ def test_temperature_endpoint_stale_data(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
     """Test the temperature endpoint with mixed results: some valid, some failed."""
-    from datetime import timedelta
-
-    class DummyResponse:
-        def __init__(self, payload, status_code=200):
-            self._payload = payload
-            self.status_code = status_code
-
-        def raise_for_status(self):
-            if self.status_code >= 400:
-                raise requests.HTTPError(f"status={self.status_code}")
-
-        def json(self):
-            return self._payload
-
     def fake_get(url, timeout):
         box_id = url.rsplit("/", 1)[-1]
         
@@ -330,13 +263,8 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
 @pytest.mark.integration
 def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
     """Test the temperature endpoint when all boxes fail in different ways."""
-    from datetime import timedelta
-
-    call_count = [0]
-
     def fake_get(url, timeout):
         box_id = url.rsplit("/", 1)[-1]
-        call_count[0] += 1
         
         # First box: timeout
         if box_id == SENSEBOX_IDS[0]:
@@ -345,36 +273,22 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
         # Second box: stale data
         elif box_id == SENSEBOX_IDS[1]:
             old_time = datetime.now(timezone.utc) - timedelta(hours=3)
-            
-            class DummyResponse:
-                status_code = 200
-                def raise_for_status(self):
-                    pass
-                def json(self):
-                    return {
-                        "sensors": [
-                            {
-                                "title": TEMPERATURE_SENSOR_PHENOMENON,
-                                "lastMeasurement": {
-                                    "value": "25.0",
-                                    "createdAt": old_time.isoformat(),
-                                },
-                            }
-                        ]
+            payload = {
+                "sensors": [
+                    {
+                        "title": TEMPERATURE_SENSOR_PHENOMENON,
+                        "lastMeasurement": {
+                            "value": "25.0",
+                            "createdAt": old_time.isoformat(),
+                        },
                     }
-            
-            return DummyResponse()
+                ]
+            }
+            return DummyResponse(payload)
         
         # Third box: missing sensor data
         else:
-            class DummyResponse:
-                status_code = 200
-                def raise_for_status(self):
-                    pass
-                def json(self):
-                    return {"sensors": []}
-            
-            return DummyResponse()
+            return DummyResponse({"sensors": []})
 
     monkeypatch.setattr("sensebox_service.requests.get", fake_get)
 
