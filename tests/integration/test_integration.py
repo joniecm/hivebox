@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from src.app import app
-from src.sensebox_service import SENSEBOX_IDS, TEMPERATURE_SENSOR_PHENOMENON
+from app import app
+from sensebox_service import SENSEBOX_IDS, TEMPERATURE_SENSOR_PHENOMENON
 
 
 @pytest.fixture()
@@ -50,7 +50,7 @@ def test_temperature_endpoint_integration(client, monkeypatch):
         }
         return DummyResponse(payload)
 
-    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 200
