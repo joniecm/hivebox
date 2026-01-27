@@ -62,6 +62,7 @@ jobs:
           pytest test_app.py -v --cov=. --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
+        if: github.event_name == 'pull_request'
         uses: MishaKav/pytest-coverage-comment@v1.2.0
         with:
           pytest-coverage-path: ./pytest-coverage.txt
