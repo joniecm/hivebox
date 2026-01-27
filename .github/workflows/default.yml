@@ -141,9 +141,20 @@ jobs:
         run: |
           if [ -f app.pid ]; then kill $(cat app.pid); fi
 
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build-docker:
     runs-on: ubuntu-latest
-    needs: [unit-tests, api-tests, integration-tests]
+    needs: [unit-tests, api-tests, integration-tests, sonarqube]
     name: Build Docker Image
     steps:
       - name: Check out source repository
