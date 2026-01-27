@@ -34,7 +34,7 @@ def test_temperature_endpoint_integration(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         box_id = url.rsplit("/", 1)[-1]
         now = datetime.now(timezone.utc).isoformat()
         payload = {
