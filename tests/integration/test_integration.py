@@ -132,7 +132,7 @@ def test_temperature_endpoint_missing_sensors(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         # Return data without sensors field
         payload = {"name": "TestBox"}
         return DummyResponse(payload)
@@ -160,7 +160,7 @@ def test_temperature_endpoint_no_temperature_sensor(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         now = datetime.now(timezone.utc).isoformat()
         payload = {
             "sensors": [
@@ -198,7 +198,7 @@ def test_temperature_endpoint_invalid_temperature_value(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         now = datetime.now(timezone.utc).isoformat()
         payload = {
             "sensors": [
@@ -238,7 +238,7 @@ def test_temperature_endpoint_stale_data(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         # Data from 2 hours ago
         old_time = datetime.now(timezone.utc) - timedelta(hours=2)
         payload = {
@@ -284,7 +284,7 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
         def json(self):
             return self._payload
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         box_id = url.rsplit("/", 1)[-1]
 
         # First box: valid fresh data
@@ -341,7 +341,7 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
 
     call_count = [0]
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout=None):
         box_id = url.rsplit("/", 1)[-1]
         call_count[0] += 1
 
