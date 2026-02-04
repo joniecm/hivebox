@@ -59,7 +59,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest test_app.py -v --cov=. --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
+          pytest tests/test_app.py -v --cov=src --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
         if: github.event_name == 'pull_request'
@@ -108,7 +108,7 @@ jobs:
 
       - name: Validate if API works (/version check)
         run: |
-          python app.py &
+          python -m src.app &
           echo $! > app.pid
           sleep 3 # give the app some time to start
           success=false
@@ -126,7 +126,7 @@ jobs:
 
       - name: Verify /version endpoint
         run: |
-          expected=$(python -c "from version import VERSION; print(VERSION)")
+          expected=$(python -c "from src.version import VERSION; print(VERSION)")
           actual=$(python -c "import json; print(json.load(open('/tmp/version.json'))['version'])")
 
           if [ "$actual" != "$expected" ]; then
