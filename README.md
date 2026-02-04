@@ -63,7 +63,8 @@ hivebox/
 │   ├── sensebox_service.py     # SenseBox API integration
 │   └── version.py              # Version information
 ├── tests/                      # Test files
-│   ├── test_app.py            # Unit tests
+│   ├── unit/                  # Unit tests
+│   │   └── test_app.py
 │   └── integration/           # Integration tests
 │       └── test_integration.py
 ├── infra/                      # Infrastructure configuration
@@ -214,7 +215,7 @@ pytest tests/ -v
 Unit tests only:
 
 ```bash
-pytest tests/test_app.py -v
+pytest tests/unit/ -v
 ```
 
 Integration tests only:

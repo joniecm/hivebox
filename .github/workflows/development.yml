@@ -59,7 +59,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/test_app.py -v --cov=src --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
+          pytest tests/unit/ -v --cov=src --cov-report=term-missing:skip-covered --junitxml=pytest.xml | tee pytest-coverage.txt
 
       - name: Pytest coverage comment
         if: github.event_name == 'pull_request'
