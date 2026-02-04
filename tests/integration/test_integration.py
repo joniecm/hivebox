@@ -109,7 +109,9 @@ def test_temperature_endpoint_http_error(client, monkeypatch):
     def fake_get_http_error(url, timeout):
         return DummyResponse(status_code=500)
 
-    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get_http_error)
+    monkeypatch.setattr(
+        "src.sensebox_service.requests.get", fake_get_http_error
+    )
 
     response = client.get("/temperature")
     assert response.status_code == 503
