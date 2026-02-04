@@ -19,6 +19,9 @@ jobs:
   checkov-scan:
     runs-on: ubuntu-latest
     name: Checkov - Kubernetes Security Scan
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
