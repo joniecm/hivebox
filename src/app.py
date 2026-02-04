@@ -109,7 +109,7 @@ def print_version() -> None:
     Exits with code 0 on success, 1 on failure.
     """
     if not VERSION:
-        print("", file=sys.stderr)
+        print("Error: VERSION not defined", file=sys.stderr)
         sys.exit(1)
 
     print(VERSION)
