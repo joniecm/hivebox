@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from app import app
-from sensebox_service import SENSEBOX_IDS, TEMPERATURE_SENSOR_PHENOMENON
+from src.app import app
+from src.sensebox_service import SENSEBOX_IDS, TEMPERATURE_SENSOR_PHENOMENON
 
 
 @pytest.fixture()
@@ -51,7 +51,7 @@ def test_temperature_endpoint_integration(client, monkeypatch):
         }
         return DummyResponse(payload)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 200
@@ -66,7 +66,7 @@ def test_temperature_endpoint_api_timeout(client, monkeypatch):
     def fake_get_timeout(url, timeout):
         raise requests.Timeout("Connection timeout")
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get_timeout)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get_timeout)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -82,7 +82,7 @@ def test_temperature_endpoint_connection_error(client, monkeypatch):
         raise requests.ConnectionError("Failed to connect")
 
     monkeypatch.setattr(
-        "sensebox_service.requests.get",
+        "src.sensebox_service.requests.get",
         fake_get_connection_error,
     )
 
@@ -109,7 +109,7 @@ def test_temperature_endpoint_http_error(client, monkeypatch):
     def fake_get_http_error(url, timeout):
         return DummyResponse(status_code=500)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get_http_error)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get_http_error)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -137,7 +137,7 @@ def test_temperature_endpoint_missing_sensors(client, monkeypatch):
         payload = {"name": "TestBox"}
         return DummyResponse(payload)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -175,7 +175,7 @@ def test_temperature_endpoint_no_temperature_sensor(client, monkeypatch):
         }
         return DummyResponse(payload)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -213,7 +213,7 @@ def test_temperature_endpoint_invalid_temperature_value(client, monkeypatch):
         }
         return DummyResponse(payload)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -254,7 +254,7 @@ def test_temperature_endpoint_stale_data(client, monkeypatch):
         }
         return DummyResponse(payload)
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     assert response.status_code == 503
@@ -324,7 +324,7 @@ def test_temperature_endpoint_mixed_valid_and_failed(client, monkeypatch):
         else:
             raise requests.ConnectionError("Failed to connect")
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     # Should succeed with only the valid data from the first box
@@ -387,7 +387,7 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
 
             return DummyResponse()
 
-    monkeypatch.setattr("sensebox_service.requests.get", fake_get)
+    monkeypatch.setattr("src.sensebox_service.requests.get", fake_get)
 
     response = client.get("/temperature")
     # Should fail with 503 as no valid data is available
