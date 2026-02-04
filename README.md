@@ -332,14 +332,14 @@ kubectl apply -k ./infra/ingress-nginx
 Load the locally built image into kind:
 
 ```bash
-kind load docker-image hivebox:v1.0.0 --name hivebox
+kind load docker-image hivebox:v0.1.0 --name hivebox
 ```
 
-Note: If you're using a locally built image with tag `hivebox:latest`, you'll need to update the deployment.yaml image reference or tag your image as `v1.0.0`:
+Note: If you're using a locally built image with tag `hivebox:latest`, you'll need to update the deployment.yaml image reference or tag your image as `v0.1.0`:
 
 ```bash
-docker tag hivebox:latest hivebox:v1.0.0
-kind load docker-image hivebox:v1.0.0 --name hivebox
+docker tag hivebox:latest hivebox:v0.1.0
+kind load docker-image hivebox:v0.1.0--name hivebox
 ```
 
 Deploy the app manifests (namespace will be created automatically):
