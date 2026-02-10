@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hivebox
-  namespace: hivebox
   labels:
     app: hivebox
 spec:
@@ -25,7 +24,35 @@ spec:
       containers:
         - name: hivebox
           image: hivebox:v0.1.0
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MINIO_ENDPOINT
+              value: minio:9000
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: accessKey
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secretKey
+            - name: MINIO_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-config
+                  key: bucket
+            - name: MINIO_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-config
+                  key: secure
+            - name: MINIO_CREATE_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-config
+                  key: createBucket
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true

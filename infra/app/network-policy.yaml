@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: hivebox-network-policy
-  namespace: hivebox
 spec:
   podSelector:
     matchLabels:
@@ -17,12 +16,18 @@ spec:
         - protocol: TCP
           port: 5000
   egress:
+    - ports:
+        - protocol: TCP
+          port: 443
     - to:
-        - namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              app: minio
       ports:
         - protocol: TCP
-          port: 443  # HTTPS for external API calls
+          port: 9000
+    - ports:
         - protocol: TCP
-          port: 53   # DNS
+          port: 53
         - protocol: UDP
-          port: 53   # DNS
+          port: 53

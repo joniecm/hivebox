@@ -113,7 +113,7 @@ curl http://localhost:5000/version
 
 #### GET /temperature
 
-Returns the current average temperature across all configured senseBoxes.
+Returns the latest average temperature captured by the background fetcher.
 
 **Parameters:** None
 
@@ -148,15 +148,54 @@ Returns the current average temperature across all configured senseBoxes.
 
 **Notes:**
 
-- Only includes temperature data from the last hour
+- Served from the in-memory buffer populated by the background job
+- Background job fetches data from openSenseMap API (https://api.opensensemap.org)
+- Only includes temperature data from the last hour when recorded
 - Temperature is rounded to 2 decimal places
-- Fetches data from openSenseMap API (https://api.opensensemap.org)
 - Configured senseBox IDs are stored in `src/sensebox_service.py`
 
 **Example:**
 
 ```bash
 curl http://localhost:5000/temperature
+```
+
+#### POST /store
+
+Flushes buffered temperature measurements to MinIO.
+
+**Parameters:** None
+
+**Response (Success):**
+
+```json
+{
+  "flushed": 3
+}
+```
+
+**Response (Error - MinIO Not Configured):**
+
+```json
+{
+  "error": "MinIO not configured",
+  "message": "Unable to flush temperature data to MinIO."
+}
+```
+
+**Status Codes:**
+
+- `200 OK`: Records flushed (count returned)
+- `503 Service Unavailable`: MinIO not configured
+
+**Notes:**
+
+- The background job also flushes automatically every 5 minutes.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:5000/store
 ```
 
 #### GET /metrics
@@ -300,7 +339,7 @@ docker build -t hivebox:latest .
 Run the container:
 
 ```
-docker run --rm -p 5000:5000 hivebox:latest
+docker run --rm -it -p 5000:5000 hivebox:latest
 ```
 
 Then access the version endpoint:
@@ -329,6 +368,12 @@ Install Ingress-NGINX:
 kubectl apply -k ./infra/ingress-nginx
 ```
 
+Deploy MinIO:
+
+```bash
+kubectl apply -f ./infra/minio/
+```
+
 Load the locally built image into kind:
 
 ```bash
@@ -339,10 +384,10 @@ Note: If you're using a locally built image with tag `hivebox:latest`, you'll ne
 
 ```bash
 docker tag hivebox:latest hivebox:v0.1.0
-kind load docker-image hivebox:v0.1.0--name hivebox
+kind load docker-image hivebox:v0.1.0 --name hivebox
 ```
 
-Deploy the app manifests (namespace will be created automatically):
+Deploy the app manifests:
 
 ```bash
 kubectl apply -f ./infra/app/
@@ -351,7 +396,7 @@ kubectl apply -f ./infra/app/
 Verify the deployment:
 
 ```bash
-kubectl get all -n hivebox
+kubectl get all
 ```
 
 Wait until deployment is done (use kubectl to check) and access:
