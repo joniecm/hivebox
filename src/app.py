@@ -59,6 +59,13 @@ def configure_logging() -> None:
 
 
 def ensure_minio_ready_or_exit() -> None:
+    if (
+        os.getenv("SKIP_MINIO_CHECK")
+        or os.getenv("PYTEST_CURRENT_TEST")
+        or "pytest" in sys.modules
+    ):
+        logger.info("Skipping MinIO readiness check.")
+        return
     minio_service = MinioService.from_env()
     if minio_service is None:
         logger.error("MinIO configuration missing or invalid")
