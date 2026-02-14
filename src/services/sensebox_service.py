@@ -114,8 +114,7 @@ class SenseBoxService:
             box_data = self._get_sensebox_data(box_id)
             if box_data:
                 temp_data = self._extract_temperature_value(box_data)
-                if temp_data:
-                    if self._is_data_fresh(temp_data["timestamp"]):
+                if temp_data and self._is_data_fresh(temp_data["timestamp"]):
                         temperatures.append(temp_data["value"])
 
         if not temperatures:

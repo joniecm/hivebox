@@ -86,7 +86,7 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
                 status_code = 200
 
                 def raise_for_status(self):
-                    pass
+                    return None
 
                 def json(self):
                     return {
@@ -107,7 +107,7 @@ def test_temperature_endpoint_mixed_all_failed(client, monkeypatch):
                 status_code = 200
 
                 def raise_for_status(self):
-                    pass
+                    return None
 
                 def json(self):
                     return {"sensors": []}

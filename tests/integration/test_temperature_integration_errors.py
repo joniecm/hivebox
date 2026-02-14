@@ -79,7 +79,7 @@ def test_temperature_endpoint_missing_sensors(client, monkeypatch):
             self.status_code = status_code
 
         def raise_for_status(self):
-            pass
+            return None
 
         def json(self):
             return self._payload
@@ -109,7 +109,7 @@ def test_temperature_endpoint_no_temperature_sensor(client, monkeypatch):
             self.status_code = status_code
 
         def raise_for_status(self):
-            pass
+            return None
 
         def json(self):
             return self._payload
@@ -150,7 +150,7 @@ def test_temperature_endpoint_invalid_temperature_value(client, monkeypatch):
             self.status_code = status_code
 
         def raise_for_status(self):
-            pass
+            return None
 
         def json(self):
             return self._payload
@@ -191,7 +191,7 @@ def test_temperature_endpoint_stale_data(client, monkeypatch):
             self.status_code = status_code
 
         def raise_for_status(self):
-            pass
+            return None
 
         def json(self):
             return self._payload
