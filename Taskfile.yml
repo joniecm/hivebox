@@ -66,8 +66,8 @@ tasks:
       - kubectl apply -f ./infra/minio/
       - kubectl apply -f ./infra/app/
       - echo "Waiting for deployments to be ready..."
-      - kubectl wait --for=condition=available --timeout=120s deployment/hivebox-app -n {{.APP_NAMESPACE}} || true
-      - kubectl wait --for=condition=available --timeout=120s deployment/minio -n {{.MINIO_NAMESPACE}} || true
+      - kubectl wait --for=condition=available --timeout=120s deployment/hivebox-app -n {{.APP_NAMESPACE}} || echo "Warning: hivebox-app deployment may still be starting"
+      - kubectl wait --for=condition=available --timeout=120s deployment/minio -n {{.MINIO_NAMESPACE}} || echo "Warning: minio deployment may still be starting"
       - echo "Deployment complete! Access the app at http://localhost:4080/version"
 
   kind:delete:
