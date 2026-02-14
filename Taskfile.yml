@@ -1,0 +1,91 @@
+version: '3'
+
+vars:
+  DOCKER_IMAGE: hivebox
+  DOCKER_TAG: v0.1.0
+  KIND_CLUSTER: hivebox
+  APP_NAMESPACE: default
+  MINIO_NAMESPACE: default
+
+tasks:
+  install:
+    desc: Install pip dependencies
+    cmds:
+      - pip install -r requirements.txt
+
+  lint:
+    desc: Run flake8 linter
+    cmds:
+      - pip install flake8==7.3.0
+      - flake8 .
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - pytest tests/unit/ -v
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - pytest tests/integration/ -v
+
+  test:all:
+    desc: Run all tests (unit and integration)
+    cmds:
+      - pytest tests/ -v
+
+  docker:build:
+    desc: Build Docker image
+    cmds:
+      - docker build -t {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} .
+      - docker tag {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} {{.DOCKER_IMAGE}}:latest
+
+  docker:run:
+    desc: Run container locally
+    cmds:
+      - docker run --rm -it -p 5000:5000 {{.DOCKER_IMAGE}}:latest
+
+  kind:create:
+    desc: Create kind cluster
+    cmds:
+      - kind create cluster --config ./infra/kind-config.yaml
+
+  kind:load:
+    desc: Load Docker image into kind
+    deps:
+      - docker:build
+    cmds:
+      - kind load docker-image {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} --name {{.KIND_CLUSTER}}
+
+  kind:deploy:
+    desc: Deploy app to kind (build, load, and apply manifests)
+    deps:
+      - kind:load
+    cmds:
+      - kubectl apply -k ./infra/ingress-nginx
+      - kubectl apply -f ./infra/minio/
+      - kubectl apply -f ./infra/app/
+      - echo "Waiting for deployments to be ready..."
+      - kubectl wait --for=condition=available --timeout=120s deployment/hivebox-app -n {{.APP_NAMESPACE}} || true
+      - kubectl wait --for=condition=available --timeout=120s deployment/minio -n {{.MINIO_NAMESPACE}} || true
+      - echo "Deployment complete! Access the app at http://localhost:4080/version"
+
+  kind:delete:
+    desc: Delete kind cluster
+    cmds:
+      - kind delete cluster --name {{.KIND_CLUSTER}}
+
+  logs:app:
+    desc: View app logs
+    cmds:
+      - kubectl logs -l app=hivebox-app -n {{.APP_NAMESPACE}} --tail=100 -f
+
+  logs:minio:
+    desc: View MinIO logs
+    cmds:
+      - kubectl logs -l app=minio -n {{.MINIO_NAMESPACE}} --tail=100 -f
+
+  logs:ingress:
+    desc: View Ingress-NGINX logs
+    cmds:
+      - kubectl logs -l app.kubernetes.io/component=controller -n ingress-nginx --tail=100 -f
