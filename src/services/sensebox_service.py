@@ -3,6 +3,7 @@
 This module handles interactions with the openSenseMap API.
 """
 
+import logging
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
@@ -11,6 +12,8 @@ from typing import List, Dict, Optional, Any
 OPENSENSEMAP_API_BASE = "https://api.opensensemap.org"
 # German name used in openSenseMap
 TEMPERATURE_SENSOR_PHENOMENON = "Temperatur"
+
+logger = logging.getLogger(__name__)
 
 
 class SenseBoxService:
@@ -42,7 +45,12 @@ class SenseBoxService:
             response = requests.get(url, timeout=2)
             response.raise_for_status()
             return response.json()
-        except (requests.RequestException, ValueError):
+        except (requests.RequestException, ValueError) as exc:
+            logger.warning(
+                "Failed to fetch senseBox %s data: %s",
+                box_id,
+                exc,
+            )
             return None
 
     def _extract_temperature_value(
@@ -134,6 +142,7 @@ class SenseBoxService:
                     sources.append(box_id)
 
         if not temperatures:
+            logger.info("No fresh temperature data found for senseBoxes.")
             return None, []
 
         return sum(temperatures) / len(temperatures), sources

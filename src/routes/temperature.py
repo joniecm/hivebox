@@ -1,5 +1,7 @@
 """Temperature endpoint blueprint."""
 
+import logging
+
 from flask import Blueprint, jsonify
 
 from src.background.temperature_flusher import collect_temperature_record
@@ -9,6 +11,8 @@ from src.services.temperature_service import TemperatureService
 
 
 temperature_bp = Blueprint("temperature", __name__)
+
+logger = logging.getLogger(__name__)
 
 sensebox_service = SenseBoxService()
 temperature_service = TemperatureService()
@@ -30,6 +34,7 @@ def temperature():
     )
 
     if avg_temp is None:
+        logger.info("No fresh senseBox temperature data; trying MinIO.")
         minio_service = MinioService.from_env()
         if minio_service is not None:
             latest_record = minio_service.get_latest_record()
@@ -38,6 +43,7 @@ def temperature():
                 sensebox_ids = latest_record.source_hivebox_ids
 
     if avg_temp is None:
+        logger.warning("No temperature data available from senseBox or MinIO.")
         return jsonify({
             "error": "No temperature data available",
             "message": (
@@ -48,6 +54,11 @@ def temperature():
 
     rounded_temp = round(avg_temp, 2)
     collect_temperature_record(rounded_temp, sensebox_ids)
+    logger.info(
+        "Returning temperature %.2f from %s source(s).",
+        rounded_temp,
+        len(sensebox_ids),
+    )
 
     return jsonify({
         "average_temperature": rounded_temp,
