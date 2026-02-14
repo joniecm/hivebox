@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from src.services.sensebox_service import SenseBoxService
@@ -69,8 +69,11 @@ class TestSenseboxService(unittest.TestCase):
     def test_is_data_fresh_exactly_one_hour(self):
         """Test that data exactly 1 hour old is at the boundary."""
         # The implementation uses <=, so exactly 1 hour should be fresh.
-        one_hour_ago = self.get_aware_now() - timedelta(hours=1)
-        self.assertTrue(self.service._is_data_fresh(one_hour_ago))
+        fixed_now = datetime(2026, 1, 14, 22, 0, 0, tzinfo=timezone.utc)
+        one_hour_ago = fixed_now - timedelta(hours=1)
+        with patch("src.services.sensebox_service.datetime") as mock_datetime:
+            mock_datetime.now.side_effect = lambda tz=None: fixed_now
+            self.assertTrue(self.service._is_data_fresh(one_hour_ago))
 
     @patch.object(SenseBoxService, "_get_sensebox_data")
     def test_get_average_temperature_all_valid(self, mock_get_data):
