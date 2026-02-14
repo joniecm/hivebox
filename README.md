@@ -148,11 +148,11 @@ Returns the latest average temperature captured by the background fetcher.
 
 **Notes:**
 
-- Served from the in-memory buffer populated by the background job
-- Background job fetches data from openSenseMap API (https://api.opensensemap.org)
+- Fetches fresh data directly from openSenseMap (https://api.opensensemap.org)
+- Falls back to the latest MinIO record when live data is unavailable
 - Only includes temperature data from the last hour when recorded
 - Temperature is rounded to 2 decimal places
-- Configured senseBox IDs are stored in `src/sensebox_service.py`
+- Configured senseBox IDs are stored in `src/services/temperature_service.py`
 
 **Example:**
 
