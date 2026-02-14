@@ -48,7 +48,7 @@ tasks:
   kind:create:
     desc: Create kind cluster
     cmds:
-      - kind create cluster --config ./infra/kind-config.yaml
+      - kind create cluster --config ./infra/kind-config.yaml --name {{.KIND_CLUSTER}}
 
   kind:load:
     desc: Load Docker image into kind
