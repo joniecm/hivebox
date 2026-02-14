@@ -263,6 +263,97 @@ Integration tests only:
 pytest tests/integration/ -v
 ```
 
+### Using Taskfile for Common Workflows
+
+This project includes a [Taskfile](https://taskfile.dev) to standardize and simplify common development workflows. Task is a modern task runner / build tool that serves as an alternative to Makefile.
+
+#### Install Task
+
+**macOS:**
+
+```bash
+brew install go-task
+```
+
+**Linux:**
+
+```bash
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+```
+
+**Windows:**
+
+```powershell
+choco install go-task
+```
+
+Or install with Go:
+
+```bash
+go install github.com/go-task/task/v3/cmd/task@latest
+```
+
+For other installation methods, see the [official installation guide](https://taskfile.dev/installation/).
+
+#### Available Tasks
+
+List all available tasks:
+
+```bash
+task -l
+```
+
+Common tasks:
+
+```bash
+# Install dependencies
+task install
+
+# Run linter
+task lint
+
+# Run tests
+task test:unit              # Unit tests only
+task test:integration       # Integration tests only
+task test:all              # All tests
+
+# Docker operations
+task docker:build          # Build Docker image
+task docker:run            # Run container locally
+
+# Kind (local Kubernetes) operations
+task kind:create           # Create kind cluster
+task kind:load             # Load Docker image into kind
+task kind:deploy           # Build, load, and deploy to kind
+task kind:delete           # Delete kind cluster
+
+# View logs
+task logs:app              # Application logs
+task logs:minio            # MinIO logs
+task logs:ingress          # Ingress-NGINX logs
+```
+
+#### Quick Start with Task
+
+```bash
+# Install dependencies and run tests
+task install
+task test:all
+
+# Deploy to local Kubernetes cluster
+task kind:create
+task kind:deploy
+
+# Access the app
+curl http://localhost:4080/version
+
+# View logs
+task logs:app
+
+# Clean up
+task kind:delete
+```
+
 ### Code Quality & Linting
 
 This project uses automated linting tools to maintain code quality and consistency.
