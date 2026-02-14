@@ -1,0 +1,151 @@
+version: "3"
+
+vars:
+  DOCKER_IMAGE: hivebox
+  DOCKER_TAG: v0.1.0
+  KIND_CLUSTER: hivebox
+  APP_NAMESPACE: default
+  MINIO_NAMESPACE: default
+
+tasks:
+  install:
+    desc: Install pip dependencies
+    cmds:
+      - pip install -r requirements.txt
+
+  lint:
+    desc: Run flake8 linter
+    cmds:
+      - pip install flake8==7.3.0
+      - flake8 .
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - pytest tests/unit/ -v
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - pytest tests/integration/ -v
+
+  test:all:
+    desc: Run all tests (unit and integration)
+    cmds:
+      - pytest tests/ -v
+
+  run:
+    desc: Run the app locally
+    env:
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: hivebox-data
+      MINIO_SECURE: "false"
+      MINIO_CREATE_BUCKET: "true"
+      SKIP_MINIO_CHECK: "true"
+    cmds:
+      - python -m src.app
+
+  docker:build:
+    desc: Build Docker image
+    cmds:
+      - docker build -t {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} .
+      - docker tag {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} {{.DOCKER_IMAGE}}:latest
+
+  docker:run:
+    desc: Run container locally
+      - docker run --rm -it -p 5000:5000 {{.DOCKER_IMAGE}}:latest
+
+  docker:start-infra:
+    desc: Start infrastructure containers locally (MinIO)
+    cmds:
+      - docker run --rm -d -p 9000:9000
+        -e MINIO_ACCESS_KEY=minioadmin
+        -e MINIO_SECRET_KEY=minioadmin
+        --name hivebox-minio
+        minio/minio server /data
+
+  docker:stop-infra:
+    desc: Stop infrastructure containers locally (MinIO)
+    cmds:
+      - docker stop hivebox-minio
+
+  kind:create:
+    desc: Create kind cluster
+    cmds:
+      - kind create cluster --config ./infra/kind-config.yaml --name {{.KIND_CLUSTER}}
+
+  kind:create-with-kubeconfig:
+    desc: Create kind cluster and save kubeconfig to ~/.kube/config
+    deps:
+      - kind:create
+    cmds:
+      - kind get kubeconfig --name {{.KIND_CLUSTER}} > ~/.kube/config-{{.KIND_CLUSTER}}
+      - echo "Cluster created! Kubeconfig saved to ~/.kube/config-{{.KIND_CLUSTER}}"
+
+  kind:load:
+    desc: Load Docker image into kind
+    deps:
+      - docker:build
+    cmds:
+      - kind load docker-image {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} --name {{.KIND_CLUSTER}}
+
+  kind:load-restart:
+    desc: Load Docker image into kind and restart deployments
+    deps:
+      - kind:load
+    cmds:
+      - kubectl delete -f ./infra/app/deployment.yaml --ignore-not-found
+      - kubectl apply -f ./infra/app/deployment.yaml
+
+  kind:deploy:
+    desc: Deploy app to kind (build, load, and apply manifests)
+    deps:
+      - kind:load
+    cmds:
+      - kubectl apply -k ./infra/ingress-nginx
+      - task: wait-for-deployment
+        vars:
+          DEPLOYMENT: ingress-nginx-controller
+          NAMESPACE: "ingress-nginx"
+      - echo "Waiting for ingress webhook to be ready..."
+      - task: wait-for-webhook
+      - kubectl apply -f ./infra/minio/
+      - kubectl apply -f ./infra/app/
+      - echo "Waiting for deployments to be ready..."
+      - task: wait-for-deployment
+        vars:
+          DEPLOYMENT: hivebox
+          NAMESPACE: "{{.APP_NAMESPACE}}"
+      - task: wait-for-deployment
+        vars:
+          DEPLOYMENT: minio
+          NAMESPACE: "{{.MINIO_NAMESPACE}}"
+      - echo "Deployment complete! Access the app at http://localhost:4080/version"
+
+  wait-for-deployment:
+    internal: true
+    cmds:
+      - kubectl wait --for=condition=available --timeout=120s deployment/{{.DEPLOYMENT}} -n {{.NAMESPACE}}
+    ignore_error: true
+
+  wait-for-webhook:
+    internal: true
+    cmds:
+      - kubectl wait --for=condition=ready --timeout=60s pod -l app.kubernetes.io/component=controller -n ingress-nginx
+
+  kind:delete:
+    desc: Delete kind cluster
+    cmds:
+      - kind delete cluster --name {{.KIND_CLUSTER}}
+
+  kind:logs-app:
+    desc: View app logs
+    cmds:
+      - kubectl logs -l app=hivebox -n {{.APP_NAMESPACE}} --tail=100 -f
+
+  kind:logs-minio:
+    desc: View MinIO logs
+    cmds:
+      - kubectl logs -l app=minio -n {{.MINIO_NAMESPACE}} --tail=100 -f
