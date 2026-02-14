@@ -2,6 +2,8 @@
 
 from flask import Blueprint, jsonify
 
+from src.background.temperature_flusher import collect_temperature_record
+from src.services.minio_service import MinioService
 from src.services.sensebox_service import SenseBoxService
 from src.services.temperature_service import TemperatureService
 
@@ -22,9 +24,18 @@ def temperature():
     Returns:
         JSON response with average_temperature field, or error message.
     """
+    sensebox_ids = temperature_service.get_sensebox_ids()
     avg_temp = sensebox_service.get_average_temperature_for_fresh_data(
-        box_ids=temperature_service.get_sensebox_ids()
+        box_ids=sensebox_ids
     )
+
+    if avg_temp is None:
+        minio_service = MinioService.from_env()
+        if minio_service is not None:
+            latest_record = minio_service.get_latest_record()
+            if latest_record is not None:
+                avg_temp = latest_record.average_temperature
+                sensebox_ids = latest_record.source_hivebox_ids
 
     if avg_temp is None:
         return jsonify({
@@ -36,6 +47,7 @@ def temperature():
         }), 503
 
     rounded_temp = round(avg_temp, 2)
+    collect_temperature_record(rounded_temp, sensebox_ids)
 
     return jsonify({
         "average_temperature": rounded_temp,
