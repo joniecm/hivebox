@@ -317,30 +317,48 @@ task test:unit              # Unit tests only
 task test:integration       # Integration tests only
 task test:all              # All tests
 
+# Run app locally
+task run                   # Run Flask app with local MinIO config
+
 # Docker operations
 task docker:build          # Build Docker image
 task docker:run            # Run container locally
+task docker:start-infra    # Start local MinIO container
+task docker:stop-infra     # Stop local MinIO container
 
 # Kind (local Kubernetes) operations
-task kind:create           # Create kind cluster
-task kind:load             # Load Docker image into kind
-task kind:deploy           # Build, load, and deploy to kind
-task kind:delete           # Delete kind cluster
+task kind:create                    # Create kind cluster
+task kind:create-with-kubeconfig    # Create cluster and save kubeconfig
+task kind:load                      # Build and load image into kind
+task kind:load-restart              # Load image and restart deployment
+task kind:deploy                    # Build, load, and deploy everything
+task kind:delete                    # Delete kind cluster
 
 # View logs
-task logs:app              # Application logs
-task logs:minio            # MinIO logs
-task logs:ingress          # Ingress-NGINX logs
+task kind:logs-app         # Application logs
+task kind:logs-minio       # MinIO logs
 ```
 
 #### Quick Start with Task
+
+**Local development:**
 
 ```bash
 # Install dependencies and run tests
 task install
 task test:all
 
-# Deploy to local Kubernetes cluster
+# Run locally
+task run
+
+# Access the app
+curl http://localhost:5000/version
+```
+
+**Kubernetes deployment:**
+
+```bash
+# Create cluster and deploy
 task kind:create
 task kind:deploy
 
@@ -348,7 +366,7 @@ task kind:deploy
 curl http://localhost:4080/version
 
 # View logs
-task logs:app
+task kind:logs-app
 
 # Clean up
 task kind:delete
