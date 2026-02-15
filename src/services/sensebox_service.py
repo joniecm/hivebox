@@ -53,6 +53,17 @@ class SenseBoxService:
             )
             return None
 
+    def is_box_accessible(self, box_id: str) -> bool:
+        """Check if a senseBox is accessible.
+
+        Args:
+            box_id: The unique identifier of the senseBox.
+
+        Returns:
+            True if the box can be accessed, False otherwise.
+        """
+        return self._get_sensebox_data(box_id) is not None
+
     def _extract_temperature_value(
         self, box_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:

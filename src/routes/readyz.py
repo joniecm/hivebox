@@ -6,7 +6,11 @@ from typing import Optional
 from flask import Blueprint, jsonify
 
 from src.services.sensebox_service import SenseBoxService
-from src.services.temperature_service import SENSEBOX_IDS
+from src.services.temperature_service import (
+    CACHE_KEY_LATEST,
+    CACHE_TTL_SECONDS,
+    SENSEBOX_IDS,
+)
 from src.services.valkey_service import ValkeyService
 
 
@@ -16,8 +20,6 @@ logger = logging.getLogger(__name__)
 sensebox_service = SenseBoxService(SENSEBOX_IDS)
 valkey_service = ValkeyService.from_env()
 
-CACHE_KEY_LATEST = "temperature:latest:v1"
-CACHE_TTL_SECONDS = 60
 CACHE_MAX_AGE_MINUTES = 5
 
 
@@ -31,8 +33,7 @@ def check_sensebox_accessibility() -> tuple[int, int]:
     total = len(SENSEBOX_IDS)
 
     for box_id in SENSEBOX_IDS:
-        box_data = sensebox_service._get_sensebox_data(box_id)
-        if box_data is not None:
+        if sensebox_service.is_box_accessible(box_id):
             accessible += 1
 
     return accessible, total
