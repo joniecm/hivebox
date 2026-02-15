@@ -17,6 +17,7 @@ sensebox_service = SenseBoxService(SENSEBOX_IDS)
 valkey_service = ValkeyService.from_env()
 
 CACHE_KEY_LATEST = "temperature:latest:v1"
+CACHE_TTL_SECONDS = 60
 CACHE_MAX_AGE_MINUTES = 5
 
 
@@ -49,7 +50,7 @@ def get_cache_age_seconds() -> Optional[int]:
     ttl = valkey_service.ttl(CACHE_KEY_LATEST)
     if ttl is None:
         return None
-    
+
     age = CACHE_TTL_SECONDS - ttl
     return max(0, age)
 

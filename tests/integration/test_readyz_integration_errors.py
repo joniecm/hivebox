@@ -53,7 +53,7 @@ def test_readyz_returns_503_when_majority_inaccessible_and_cache_old(
 def test_readyz_returns_503_when_two_of_three_inaccessible_and_cache_old(
     client, monkeypatch
 ):
-    """Test /readyz returns 503 when 2/3 inaccessible (>50%) AND cache is old."""
+    """Test /readyz returns 503 when 2/3 inaccessible, cache old."""
     call_count = [0]
 
     def fake_get(url, timeout=None):  # noqa: ARG001

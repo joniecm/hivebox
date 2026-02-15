@@ -3,7 +3,10 @@ import unittest
 from unittest.mock import patch
 
 from src.app import app
-from src.routes.readyz import check_sensebox_accessibility, get_cache_age_seconds
+from src.routes.readyz import (
+    check_sensebox_accessibility,
+    get_cache_age_seconds,
+)
 
 
 class TestReadyzEndpoint(unittest.TestCase):
@@ -36,8 +39,9 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_200_when_half_accessible_cache_fresh(
         self, mock_cache_age, mock_check
     ):
-        """Test that /readyz returns 200 when exactly 50% accessible and cache is fresh."""
-        mock_check.return_value = (1, 3)  # 1 accessible, 2 inaccessible (not > 50%)
+        """Test /readyz returns 200 when 50% accessible, cache fresh."""
+        # 1 accessible, 2 inaccessible (not > 50%)
+        mock_check.return_value = (1, 3)
         mock_cache_age.return_value = 60  # 1 minute old
 
         response = self.client.get("/readyz")
@@ -50,7 +54,7 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_200_when_many_inaccessible_but_cache_fresh(
         self, mock_cache_age, mock_check
     ):
-        """Test that /readyz returns 200 when >50% inaccessible but cache is fresh."""
+        """Test /readyz returns 200 when >50% inaccessible, cache fresh."""
         mock_check.return_value = (0, 3)  # all inaccessible
         mock_cache_age.return_value = 60  # 1 minute old (< 5 minutes)
 
@@ -64,7 +68,7 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_200_when_cache_old_but_boxes_accessible(
         self, mock_cache_age, mock_check
     ):
-        """Test that /readyz returns 200 when cache is old but boxes are accessible."""
+        """Test /readyz returns 200 when cache old, boxes accessible."""
         mock_check.return_value = (3, 3)  # all accessible
         mock_cache_age.return_value = 400  # 6+ minutes old
 
@@ -78,7 +82,7 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_503_when_both_conditions_met(
         self, mock_cache_age, mock_check
     ):
-        """Test that /readyz returns 503 when >50% inaccessible AND cache is old."""
+        """Test /readyz returns 503 when >50% inaccessible AND old."""
         mock_check.return_value = (0, 3)  # all inaccessible (3 > 50%)
         mock_cache_age.return_value = 400  # 6+ minutes old
 
@@ -93,7 +97,7 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_503_with_2_of_3_inaccessible_and_old_cache(
         self, mock_cache_age, mock_check
     ):
-        """Test that /readyz returns 503 when 2/3 inaccessible (>50%) AND cache old."""
+        """Test /readyz returns 503 when 2/3 inaccessible, cache old."""
         mock_check.return_value = (1, 3)  # 1 accessible, 2 inaccessible
         mock_cache_age.return_value = 400  # 6+ minutes old
 

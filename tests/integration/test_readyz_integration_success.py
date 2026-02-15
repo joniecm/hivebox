@@ -24,8 +24,10 @@ class DummyResponse:
 
 
 @pytest.mark.integration
-def test_readyz_returns_200_when_all_senseboxes_accessible(client, monkeypatch):
-    """Test /readyz returns 200 when all senseBoxes are accessible."""
+def test_readyz_returns_200_when_all_senseboxes_accessible(
+    client, monkeypatch
+):
+    """Test /readyz returns 200 when all senseBoxes accessible."""
 
     def fake_get(url, timeout=None):  # noqa: ARG001
         now = datetime.now(timezone.utc).isoformat()
