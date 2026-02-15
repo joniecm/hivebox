@@ -6,6 +6,7 @@ vars:
   KIND_CLUSTER: hivebox
   APP_NAMESPACE: default
   MINIO_NAMESPACE: default
+  VALKEY_NAMESPACE: default
 
 tasks:
   install:
@@ -44,6 +45,9 @@ tasks:
       MINIO_SECURE: "false"
       MINIO_CREATE_BUCKET: "true"
       SKIP_MINIO_CHECK: "true"
+      VALKEY_HOST: localhost
+      VALKEY_PORT: "6379"
+      VALKEY_SSL: "false"
     cmds:
       - python -m src.app
 
@@ -58,18 +62,22 @@ tasks:
       - docker run --rm -it -p 5000:5000 {{.DOCKER_IMAGE}}:latest
 
   docker:start-infra:
-    desc: Start infrastructure containers locally (MinIO)
+    desc: Start infrastructure containers locally (MinIO, Valkey)
     cmds:
       - docker run --rm -d -p 9000:9000
         -e MINIO_ACCESS_KEY=minioadmin
         -e MINIO_SECRET_KEY=minioadmin
         --name hivebox-minio
         minio/minio server /data
+      - docker run --rm -d -p 6379:6379
+        --name hivebox-valkey
+        valkey/valkey:7.2.6
 
   docker:stop-infra:
-    desc: Stop infrastructure containers locally (MinIO)
+    desc: Stop infrastructure containers locally (MinIO, Valkey)
     cmds:
       - docker stop hivebox-minio
+      - docker stop hivebox-valkey
 
   kind:create:
     desc: Create kind cluster
@@ -112,6 +120,7 @@ tasks:
       - echo "Waiting for ingress webhook to be ready..."
       - task: wait-for-webhook
       - kubectl apply -f ./infra/minio/
+      - kubectl apply -f ./infra/valkey/
       - kubectl apply -f ./infra/app/
       - echo "Waiting for deployments to be ready..."
       - task: wait-for-deployment
@@ -122,6 +131,10 @@ tasks:
         vars:
           DEPLOYMENT: minio
           NAMESPACE: "{{.MINIO_NAMESPACE}}"
+      - task: wait-for-deployment
+        vars:
+          DEPLOYMENT: valkey
+          NAMESPACE: "{{.VALKEY_NAMESPACE}}"
       - echo "Deployment complete! Access the app at http://localhost:4080/version"
 
   wait-for-deployment:
@@ -149,3 +162,8 @@ tasks:
     desc: View MinIO logs
     cmds:
       - kubectl logs -l app=minio -n {{.MINIO_NAMESPACE}} --tail=100 -f
+
+  kind:logs-valkey:
+    desc: View Valkey logs
+    cmds:
+      - kubectl logs -l app=valkey -n {{.VALKEY_NAMESPACE}} --tail=100 -f

@@ -26,6 +26,13 @@ spec:
       ports:
         - protocol: TCP
           port: 9000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: valkey
+      ports:
+        - protocol: TCP
+          port: 6379
     - ports:
         - protocol: TCP
           port: 53

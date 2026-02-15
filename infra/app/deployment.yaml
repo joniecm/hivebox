@@ -53,6 +53,12 @@ spec:
                 configMapKeyRef:
                   name: minio-config
                   key: createBucket
+            - name: VALKEY_HOST
+              value: valkey
+            - name: VALKEY_PORT
+              value: "6379"
+            - name: VALKEY_SSL
+              value: "false"
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
