@@ -204,13 +204,51 @@ Exposes Prometheus metrics for the app.
 
 **Metrics:**
 
-- `http_requests_total{method, path, status}` (counter)
-- `http_request_duration_seconds{method, path, status}` (histogram)
+**HTTP Request Metrics:**
+- `http_requests_total{method, path, status}` (counter) - Total HTTP requests
+- `http_request_duration_seconds{method, path, status}` (histogram) - HTTP request duration
+
+**Cache Performance Metrics:**
+- `cache_hit_total{type}` (counter) - Number of cache hits, labeled by cache type (e.g., `valkey`)
+- `cache_miss_total{type}` (counter) - Number of cache misses, labeled by cache type
+
+**Storage Operation Metrics:**
+- `storage_write_operations_total{type, status}` (counter) - Storage write operations, labeled by type (e.g., `minio`) and status (`success`, `failed`)
+
+**Temperature Workflow Metrics:**
+- `temperature_requests_total{status}` (counter) - Count of `/temperature` endpoint requests, labeled by outcome (`success`, `no_data`, `error`)
+- `temperature_data_age_seconds` (gauge) - Age in seconds of the most recent temperature value used
 
 **Example:**
 
 ```bash
 curl http://localhost:5000/metrics
+```
+
+**Sample Output:**
+
+```
+# HELP cache_hit_total Total number of cache hits
+# TYPE cache_hit_total counter
+cache_hit_total{type="valkey"} 42.0
+
+# HELP cache_miss_total Total number of cache misses
+# TYPE cache_miss_total counter
+cache_miss_total{type="valkey"} 5.0
+
+# HELP storage_write_operations_total Total storage write operations
+# TYPE storage_write_operations_total counter
+storage_write_operations_total{type="minio",status="success"} 128.0
+storage_write_operations_total{type="minio",status="failed"} 2.0
+
+# HELP temperature_requests_total Total temperature endpoint requests
+# TYPE temperature_requests_total counter
+temperature_requests_total{status="success"} 156.0
+temperature_requests_total{status="no_data"} 3.0
+
+# HELP temperature_data_age_seconds Age in seconds of the most recent temperature value
+# TYPE temperature_data_age_seconds gauge
+temperature_data_age_seconds 12.5
 ```
 
 #### GET /readyz
