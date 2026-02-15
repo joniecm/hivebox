@@ -39,8 +39,10 @@ class TestReadyzEndpoint(unittest.TestCase):
     def test_readyz_returns_200_when_less_than_half_accessible_cache_fresh(
         self, mock_cache_age, mock_check
     ):
-        """Test /readyz returns 200 when less than 50% boxes are accessible (33%) and cache is fresh."""
-        # 1 accessible, 2 inaccessible (66.67% inaccessible), but cache is fresh (60s < 300s)
+        """Test /readyz returns 200 when less than 50% boxes are
+        accessible (33%) and cache is fresh."""
+        # 1 accessible, 2 inaccessible (66.67% inaccessible),
+        # but cache is fresh (60s < 300s)
         # Returns 200 because BOTH conditions must be true for 503
         mock_check.return_value = (1, 3)
         mock_cache_age.return_value = 60  # 1 minute old
