@@ -10,6 +10,9 @@ from src.services.temperature_service import (
 )
 
 
+MODULE_PATH = "src.services.temperature_service"
+
+
 class TestTemperatureCache(unittest.TestCase):
     """Unit tests for temperature caching helpers."""
 
@@ -18,9 +21,9 @@ class TestTemperatureCache(unittest.TestCase):
             average_temperature=21.5,
             status="Good",
         )
-        with patch("src.services.temperature_service.valkey_service", None):
+        with patch(f"{MODULE_PATH}.valkey_service", None):
             with patch(
-                "src.services.temperature_service.get_latest_temperature_response",
+                f"{MODULE_PATH}.get_latest_temperature_response",
                 return_value=response,
             ) as mock_latest:
                 result = get_latest_temperature_response_cached()
@@ -36,9 +39,9 @@ class TestTemperatureCache(unittest.TestCase):
         }
         valkey.ttl.return_value = 30
 
-        with patch("src.services.temperature_service.valkey_service", valkey):
+        with patch(f"{MODULE_PATH}.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service.get_latest_temperature_response"
+                f"{MODULE_PATH}.get_latest_temperature_response"
             ) as mock_latest:
                 result = get_latest_temperature_response_cached()
 
@@ -55,9 +58,9 @@ class TestTemperatureCache(unittest.TestCase):
         }
         valkey.ttl.return_value = 5
 
-        with patch("src.services.temperature_service.valkey_service", valkey):
+        with patch(f"{MODULE_PATH}.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service."
+                f"{MODULE_PATH}."
                 "_refresh_cached_temperature_response_async"
             ) as mock_refresh:
                 result = get_latest_temperature_response_cached()
@@ -73,9 +76,9 @@ class TestTemperatureCache(unittest.TestCase):
             status="Good",
         )
 
-        with patch("src.services.temperature_service.valkey_service", valkey):
+        with patch(f"{MODULE_PATH}.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service.get_latest_temperature_response",
+                f"{MODULE_PATH}.get_latest_temperature_response",
                 return_value=response,
             ):
                 result = get_latest_temperature_response_cached()
@@ -91,9 +94,9 @@ class TestTemperatureCache(unittest.TestCase):
         valkey = Mock()
         valkey.acquire_lock.return_value = False
 
-        with patch("src.services.temperature_service.valkey_service", valkey):
+        with patch(f"{MODULE_PATH}.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service.get_latest_temperature_response"
+                f"{MODULE_PATH}.get_latest_temperature_response"
             ) as mock_latest:
                 _refresh_cached_temperature_response()
 
@@ -108,9 +111,9 @@ class TestTemperatureCache(unittest.TestCase):
             status="Good",
         )
 
-        with patch("src.services.temperature_service.valkey_service", valkey):
+        with patch(f"{MODULE_PATH}.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service.get_latest_temperature_response",
+                f"{MODULE_PATH}.get_latest_temperature_response",
                 return_value=response,
             ):
                 _refresh_cached_temperature_response()
