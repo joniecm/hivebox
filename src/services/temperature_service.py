@@ -1,12 +1,14 @@
 """Service module for temperature business logic."""
 
 import logging
+import threading
 from dataclasses import dataclass
 from typing import List, Optional
 
 from src.background.temperature_flusher import collect_temperature_record
 from src.services.minio_service import MinioService
 from src.services.sensebox_service import SenseBoxService
+from src.services.valkey_service import ValkeyService
 
 
 # List of senseBox IDs to fetch temperature data from
@@ -51,6 +53,11 @@ class TemperatureService:
 
 logger = logging.getLogger(__name__)
 
+CACHE_KEY_LATEST = "temperature:latest:v1"
+CACHE_LOCK_KEY = "temperature:latest:lock"
+CACHE_TTL_SECONDS = 60
+CACHE_REFRESH_THRESHOLD_SECONDS = 10
+
 
 @dataclass(frozen=True)
 class TemperatureResponse:
@@ -58,7 +65,8 @@ class TemperatureResponse:
     status: str
 
 
-sensebox_service = SenseBoxService()
+sensebox_service = SenseBoxService(SENSEBOX_IDS)
+valkey_service = ValkeyService.from_env()
 
 
 def get_temperature_status(temperature: float) -> str:
@@ -72,7 +80,9 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     Prefers fresh data from senseBoxes. Falls back to the latest MinIO record
     when live data is unavailable.
     """
-    average, sources = sensebox_service.get_average_temperature_with_sources()
+    average, sources = sensebox_service.get_average_temperature_with_sources(
+        SENSEBOX_IDS
+    )
     used_fallback = False
 
     if average is None:
@@ -102,3 +112,75 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
         average_temperature=rounded_average,
         status=get_temperature_status(rounded_average),
     )
+
+
+def _serialize_temperature_response(
+    response: TemperatureResponse,
+) -> dict:
+    return {
+        "average_temperature": response.average_temperature,
+        "status": response.status,
+    }
+
+
+def _deserialize_temperature_response(
+    payload: dict,
+) -> Optional[TemperatureResponse]:
+    try:
+        return TemperatureResponse(
+            average_temperature=float(payload["average_temperature"]),
+            status=str(payload["status"]),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _refresh_cached_temperature_response() -> None:
+    if valkey_service is None:
+        return
+    if not valkey_service.acquire_lock(CACHE_LOCK_KEY, ttl_seconds=5):
+        return
+
+    try:
+        response = get_latest_temperature_response()
+        if response is None:
+            return
+        valkey_service.set_json(
+            CACHE_KEY_LATEST,
+            _serialize_temperature_response(response),
+            ttl_seconds=CACHE_TTL_SECONDS,
+        )
+    finally:
+        valkey_service.release_lock(CACHE_LOCK_KEY)
+
+
+def _refresh_cached_temperature_response_async() -> None:
+    thread = threading.Thread(
+        target=_refresh_cached_temperature_response,
+        daemon=True,
+    )
+    thread.start()
+
+
+def get_latest_temperature_response_cached() -> Optional[TemperatureResponse]:
+    if valkey_service is None:
+        return get_latest_temperature_response()
+
+    cached_payload = valkey_service.get_json(CACHE_KEY_LATEST)
+    if cached_payload:
+        cached_response = _deserialize_temperature_response(cached_payload)
+        if cached_response is not None:
+            ttl = valkey_service.ttl(CACHE_KEY_LATEST)
+            if ttl is not None and ttl <= CACHE_REFRESH_THRESHOLD_SECONDS:
+                _refresh_cached_temperature_response_async()
+            return cached_response
+
+    response = get_latest_temperature_response()
+    if response is None:
+        return None
+    valkey_service.set_json(
+        CACHE_KEY_LATEST,
+        _serialize_temperature_response(response),
+        ttl_seconds=CACHE_TTL_SECONDS,
+    )
+    return response

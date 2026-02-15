@@ -4,3 +4,4 @@ requests==2.31.0
 prometheus_client==0.20.0
 pytest==8.3.4
 minio==7.2.7
+redis==5.0.7
