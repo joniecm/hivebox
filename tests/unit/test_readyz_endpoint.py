@@ -36,11 +36,11 @@ class TestReadyzEndpoint(unittest.TestCase):
 
     @patch("src.routes.readyz.check_sensebox_accessibility")
     @patch("src.routes.readyz.get_cache_age_seconds")
-    def test_readyz_returns_200_when_half_accessible_cache_fresh(
+    def test_readyz_returns_200_when_less_than_half_accessible_cache_fresh(
         self, mock_cache_age, mock_check
     ):
-        """Test /readyz returns 200 when 50% accessible, cache fresh."""
-        # 1 accessible, 2 inaccessible (not > 50%)
+        """Test /readyz returns 200 when <50% accessible and cache is fresh."""
+        # 1 accessible, 2 inaccessible (> 50% inaccessible), cache fresh
         mock_check.return_value = (1, 3)
         mock_cache_age.return_value = 60  # 1 minute old
 
@@ -128,29 +128,29 @@ class TestReadyzEndpoint(unittest.TestCase):
 class TestCheckSenseboxAccessibility(unittest.TestCase):
     """Test cases for check_sensebox_accessibility helper."""
 
-    @patch("src.routes.readyz.sensebox_service._get_sensebox_data")
-    def test_all_accessible(self, mock_get_data):
+    @patch("src.routes.readyz.sensebox_service.is_box_accessible")
+    def test_all_accessible(self, mock_is_accessible):
         """Test when all senseBoxes are accessible."""
-        mock_get_data.return_value = {"sensors": []}
+        mock_is_accessible.return_value = True
 
         accessible, total = check_sensebox_accessibility()
         self.assertEqual(accessible, 3)
         self.assertEqual(total, 3)
 
-    @patch("src.routes.readyz.sensebox_service._get_sensebox_data")
-    def test_none_accessible(self, mock_get_data):
+    @patch("src.routes.readyz.sensebox_service.is_box_accessible")
+    def test_none_accessible(self, mock_is_accessible):
         """Test when no senseBoxes are accessible."""
-        mock_get_data.return_value = None
+        mock_is_accessible.return_value = False
 
         accessible, total = check_sensebox_accessibility()
         self.assertEqual(accessible, 0)
         self.assertEqual(total, 3)
 
-    @patch("src.routes.readyz.sensebox_service._get_sensebox_data")
-    def test_partial_accessible(self, mock_get_data):
+    @patch("src.routes.readyz.sensebox_service.is_box_accessible")
+    def test_partial_accessible(self, mock_is_accessible):
         """Test when some senseBoxes are accessible."""
-        # Return data for first call, None for second and third
-        mock_get_data.side_effect = [{"sensors": []}, None, None]
+        # Return True for first call, False for second and third
+        mock_is_accessible.side_effect = [True, False, False]
 
         accessible, total = check_sensebox_accessibility()
         self.assertEqual(accessible, 1)

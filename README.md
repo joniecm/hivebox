@@ -264,7 +264,6 @@ Returns readiness status of the application for health checks (Kubernetes readin
 - Returns 503 only when **both** conditions are true simultaneously
 - Used for Kubernetes readiness probes and load balancer health checks
 - Checks actual senseBox API accessibility in real-time
-- See `docs/readyz-endpoint.md` for detailed documentation
 
 **Example:**
 
