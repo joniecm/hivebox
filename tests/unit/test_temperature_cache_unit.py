@@ -14,7 +14,10 @@ class TestTemperatureCache(unittest.TestCase):
     """Unit tests for temperature caching helpers."""
 
     def test_cached_response_returns_direct_when_no_valkey(self):
-        response = TemperatureResponse(average_temperature=21.5, status="Good")
+        response = TemperatureResponse(
+            average_temperature=21.5,
+            status="Good",
+        )
         with patch("src.services.temperature_service.valkey_service", None):
             with patch(
                 "src.services.temperature_service.get_latest_temperature_response",
@@ -54,7 +57,8 @@ class TestTemperatureCache(unittest.TestCase):
 
         with patch("src.services.temperature_service.valkey_service", valkey):
             with patch(
-                "src.services.temperature_service._refresh_cached_temperature_response_async"
+                "src.services.temperature_service."
+                "_refresh_cached_temperature_response_async"
             ) as mock_refresh:
                 result = get_latest_temperature_response_cached()
 
@@ -64,7 +68,10 @@ class TestTemperatureCache(unittest.TestCase):
     def test_cached_response_populates_cache_when_miss(self):
         valkey = Mock()
         valkey.get_json.return_value = None
-        response = TemperatureResponse(average_temperature=23.0, status="Good")
+        response = TemperatureResponse(
+            average_temperature=23.0,
+            status="Good",
+        )
 
         with patch("src.services.temperature_service.valkey_service", valkey):
             with patch(
@@ -96,7 +103,10 @@ class TestTemperatureCache(unittest.TestCase):
     def test_refresh_cached_temperature_response_sets_cache(self):
         valkey = Mock()
         valkey.acquire_lock.return_value = True
-        response = TemperatureResponse(average_temperature=25.0, status="Good")
+        response = TemperatureResponse(
+            average_temperature=25.0,
+            status="Good",
+        )
 
         with patch("src.services.temperature_service.valkey_service", valkey):
             with patch(
