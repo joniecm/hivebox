@@ -124,25 +124,26 @@ class SenseBoxService:
             Average temperature as float, or None if no valid data is
             available.
         """
-        average, _ = self.get_average_temperature_with_sources(box_ids)
+        average, _, _ = self.get_average_temperature_with_sources(box_ids)
         return average
 
     def get_average_temperature_with_sources(
         self, box_ids: Optional[List[str]] = None
-    ) -> tuple[Optional[float], list[str]]:
+    ) -> tuple[Optional[float], list[str], Optional[datetime]]:
         """Calculate average temperature with contributing senseBox IDs.
 
         Args:
             box_ids: List of senseBox IDs. If None, uses configured IDs.
 
         Returns:
-            Tuple of (average temperature, source box IDs).
+            Tuple of (average temperature, source box IDs, newest timestamp).
         """
         if box_ids is None:
             box_ids = self.sensebox_ids
 
         temperatures = []
         sources = []
+        newest_timestamp = None
 
         for box_id in box_ids:
             box_data = self._get_sensebox_data(box_id)
@@ -151,9 +152,12 @@ class SenseBoxService:
                 if temp_data and self._is_data_fresh(temp_data["timestamp"]):
                     temperatures.append(temp_data["value"])
                     sources.append(box_id)
+                    # Track the newest timestamp
+                    if newest_timestamp is None or temp_data["timestamp"] > newest_timestamp:
+                        newest_timestamp = temp_data["timestamp"]
 
         if not temperatures:
             logger.info("No fresh temperature data found for senseBoxes.")
-            return None, []
+            return None, [], None
 
-        return sum(temperatures) / len(temperatures), sources
+        return sum(temperatures) / len(temperatures), sources, newest_timestamp

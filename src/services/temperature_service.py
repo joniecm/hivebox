@@ -63,6 +63,7 @@ CACHE_REFRESH_THRESHOLD_SECONDS = 10
 class TemperatureResponse:
     average_temperature: float
     status: str
+    data_age_seconds: Optional[float] = None
 
 
 sensebox_service = SenseBoxService(SENSEBOX_IDS)
@@ -80,10 +81,11 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     Prefers fresh data from senseBoxes. Falls back to the latest MinIO record
     when live data is unavailable.
     """
-    average, sources = sensebox_service.get_average_temperature_with_sources(
+    average, sources, newest_timestamp = sensebox_service.get_average_temperature_with_sources(
         SENSEBOX_IDS
     )
     used_fallback = False
+    data_age_seconds = None
 
     if average is None:
         logger.info("No live temperature data; trying MinIO fallback.")
@@ -97,7 +99,17 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
             return None
         average = latest_record.average_temperature
         sources = latest_record.source_hivebox_ids
+        newest_timestamp = latest_record.timestamp
         used_fallback = True
+
+    # Calculate data age if we have a timestamp
+    if newest_timestamp is not None:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        # Ensure both timestamps are timezone-aware
+        if newest_timestamp.tzinfo is None:
+            newest_timestamp = newest_timestamp.replace(tzinfo=timezone.utc)
+        data_age_seconds = (now - newest_timestamp).total_seconds()
 
     rounded_average = round(average, 2)
     if not used_fallback:
@@ -111,6 +123,7 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     return TemperatureResponse(
         average_temperature=rounded_average,
         status=get_temperature_status(rounded_average),
+        data_age_seconds=data_age_seconds,
     )
 
 
@@ -120,6 +133,7 @@ def _serialize_temperature_response(
     return {
         "average_temperature": response.average_temperature,
         "status": response.status,
+        "data_age_seconds": response.data_age_seconds,
     }
 
 
@@ -130,6 +144,7 @@ def _deserialize_temperature_response(
         return TemperatureResponse(
             average_temperature=float(payload["average_temperature"]),
             status=str(payload["status"]),
+            data_age_seconds=float(payload["data_age_seconds"]) if payload.get("data_age_seconds") is not None else None,
         )
     except (KeyError, TypeError, ValueError):
         return None

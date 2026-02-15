@@ -3,6 +3,8 @@ import logging
 import os
 from typing import Optional
 
+from src.metrics import CACHE_HIT_TOTAL, CACHE_MISS_TOTAL
+
 try:
     import redis
 except ImportError:  # pragma: no cover - fallback when dependency missing
@@ -58,15 +60,20 @@ class ValkeyService:
             payload = self.client.get(key)
         except Exception as exc:
             logger.warning("Valkey get failed: %s", exc)
+            CACHE_MISS_TOTAL.labels(type="valkey").inc()
             return None
 
         if not payload:
+            CACHE_MISS_TOTAL.labels(type="valkey").inc()
             return None
 
         try:
-            return json.loads(payload)
+            result = json.loads(payload)
+            CACHE_HIT_TOTAL.labels(type="valkey").inc()
+            return result
         except json.JSONDecodeError:
             logger.warning("Invalid JSON in Valkey for key %s", key)
+            CACHE_MISS_TOTAL.labels(type="valkey").inc()
             return None
 
     def set_json(self, key: str, payload: dict, ttl_seconds: int) -> None:

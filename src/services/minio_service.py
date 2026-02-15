@@ -10,6 +10,7 @@ from minio import Minio
 from minio.error import S3Error
 
 from src.config import MinioConfig, load_minio_config
+from src.metrics import STORAGE_WRITE_OPERATIONS_TOTAL
 
 
 logger = logging.getLogger(__name__)
@@ -120,7 +121,13 @@ class MinioService:
                 length=len(data),
                 content_type="application/json",
             )
+            STORAGE_WRITE_OPERATIONS_TOTAL.labels(
+                type="minio", status="success"
+            ).inc()
         except (S3Error, Exception) as exc:
+            STORAGE_WRITE_OPERATIONS_TOTAL.labels(
+                type="minio", status="failed"
+            ).inc()
             logger.warning(
                 "Failed to write temperature data to MinIO: %s",
                 exc,
