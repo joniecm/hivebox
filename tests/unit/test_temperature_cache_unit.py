@@ -74,6 +74,7 @@ class TestTemperatureCache(unittest.TestCase):
         response = TemperatureResponse(
             average_temperature=23.0,
             status="Good",
+            data_age_seconds=None,
         )
 
         with patch(f"{MODULE_PATH}.valkey_service", valkey):
@@ -86,7 +87,7 @@ class TestTemperatureCache(unittest.TestCase):
         self.assertEqual(result, response)
         valkey.set_json.assert_called_once_with(
             CACHE_KEY_LATEST,
-            {"average_temperature": 23.0, "status": "Good"},
+            {"average_temperature": 23.0, "status": "Good", "data_age_seconds": None},
             ttl_seconds=CACHE_TTL_SECONDS,
         )
 
@@ -109,6 +110,7 @@ class TestTemperatureCache(unittest.TestCase):
         response = TemperatureResponse(
             average_temperature=25.0,
             status="Good",
+            data_age_seconds=None,
         )
 
         with patch(f"{MODULE_PATH}.valkey_service", valkey):
@@ -120,7 +122,7 @@ class TestTemperatureCache(unittest.TestCase):
 
         valkey.set_json.assert_called_once_with(
             CACHE_KEY_LATEST,
-            {"average_temperature": 25.0, "status": "Good"},
+            {"average_temperature": 25.0, "status": "Good", "data_age_seconds": None},
             ttl_seconds=CACHE_TTL_SECONDS,
         )
         valkey.release_lock.assert_called_once_with(
