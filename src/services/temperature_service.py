@@ -65,7 +65,7 @@ class TemperatureResponse:
     status: str
 
 
-sensebox_service = SenseBoxService()
+sensebox_service = SenseBoxService(SENSEBOX_IDS)
 valkey_service = ValkeyService.from_env()
 
 
@@ -80,7 +80,9 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     Prefers fresh data from senseBoxes. Falls back to the latest MinIO record
     when live data is unavailable.
     """
-    average, sources = sensebox_service.get_average_temperature_with_sources()
+    average, sources = sensebox_service.get_average_temperature_with_sources(
+        SENSEBOX_IDS
+    )
     used_fallback = False
 
     if average is None:
