@@ -1,0 +1,13 @@
+@baseUrl = http://localhost:4080
+
+### Version
+GET {{baseUrl}}/version
+
+### Temperature
+GET {{baseUrl}}/temperature
+
+### Store (flush to MinIO)
+POST {{baseUrl}}/store
+
+### Metrics
+GET {{baseUrl}}/metrics
