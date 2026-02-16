@@ -1,6 +1,7 @@
 """Unit tests for custom Prometheus metrics."""
 
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from src.metrics import (
@@ -12,7 +13,6 @@ from src.metrics import (
 )
 from src.services.minio_service import MinioService, TemperatureRecord
 from src.services.valkey_service import ValkeyService
-from datetime import datetime, timezone
 
 
 class TestCacheMetrics(unittest.TestCase):
@@ -22,15 +22,15 @@ class TestCacheMetrics(unittest.TestCase):
         """Test that cache hit metric increments on successful cache lookup."""
         mock_client = MagicMock()
         mock_client.get.return_value = '{"test": "data"}'
-        
+
         service = ValkeyService(mock_client)
-        
+
         # Record initial value
         initial_value = CACHE_HIT_TOTAL.labels(type="valkey")._value.get()
-        
+
         # Perform operation
         result = service.get_json("test_key")
-        
+
         # Assert
         self.assertIsNotNone(result)
         self.assertEqual(result, {"test": "data"})
@@ -41,15 +41,15 @@ class TestCacheMetrics(unittest.TestCase):
         """Test that cache miss metric increments when key not found."""
         mock_client = MagicMock()
         mock_client.get.return_value = None
-        
+
         service = ValkeyService(mock_client)
-        
+
         # Record initial value
         initial_value = CACHE_MISS_TOTAL.labels(type="valkey")._value.get()
-        
+
         # Perform operation
         result = service.get_json("test_key")
-        
+
         # Assert
         self.assertIsNone(result)
         final_value = CACHE_MISS_TOTAL.labels(type="valkey")._value.get()
@@ -59,15 +59,15 @@ class TestCacheMetrics(unittest.TestCase):
         """Test that cache miss metric increments when exception occurs."""
         mock_client = MagicMock()
         mock_client.get.side_effect = Exception("Connection error")
-        
+
         service = ValkeyService(mock_client)
-        
+
         # Record initial value
         initial_value = CACHE_MISS_TOTAL.labels(type="valkey")._value.get()
-        
+
         # Perform operation
         result = service.get_json("test_key")
-        
+
         # Assert
         self.assertIsNone(result)
         final_value = CACHE_MISS_TOTAL.labels(type="valkey")._value.get()
@@ -81,14 +81,14 @@ class TestStorageMetrics(unittest.TestCase):
         """Test that storage write success metric increments."""
         mock_client = MagicMock()
         mock_client.put_object.return_value = None
-        
+
         service = MinioService(mock_client, "test-bucket")
-        
+
         # Record initial value
         initial_value = STORAGE_WRITE_OPERATIONS_TOTAL.labels(
             type="minio", status="success"
         )._value.get()
-        
+
         # Perform operation
         record = TemperatureRecord(
             average_temperature=22.5,
@@ -96,7 +96,7 @@ class TestStorageMetrics(unittest.TestCase):
             source_hivebox_ids=["box-1"],
         )
         service.put_temperature_record(record)
-        
+
         # Assert
         final_value = STORAGE_WRITE_OPERATIONS_TOTAL.labels(
             type="minio", status="success"
@@ -107,14 +107,14 @@ class TestStorageMetrics(unittest.TestCase):
         """Test that storage write failure metric increments."""
         mock_client = MagicMock()
         mock_client.put_object.side_effect = Exception("S3 error")
-        
+
         service = MinioService(mock_client, "test-bucket")
-        
+
         # Record initial value
         initial_value = STORAGE_WRITE_OPERATIONS_TOTAL.labels(
             type="minio", status="failed"
         )._value.get()
-        
+
         # Perform operation
         record = TemperatureRecord(
             average_temperature=22.5,
@@ -122,7 +122,7 @@ class TestStorageMetrics(unittest.TestCase):
             source_hivebox_ids=["box-1"],
         )
         service.put_temperature_record(record)
-        
+
         # Assert
         final_value = STORAGE_WRITE_OPERATIONS_TOTAL.labels(
             type="minio", status="failed"
@@ -144,16 +144,16 @@ class TestTemperatureEndpointMetrics(unittest.TestCase):
             status="Good",
             data_age_seconds=10.0,
         )
-        
+
         # Record initial value
         initial_value = TEMPERATURE_REQUESTS_TOTAL.labels(
             status="success"
         )._value.get()
-        
+
         # Perform operation
         client = app.test_client()
         response = client.get("/temperature")
-        
+
         # Assert
         self.assertEqual(response.status_code, 200)
         final_value = TEMPERATURE_REQUESTS_TOTAL.labels(
@@ -167,16 +167,16 @@ class TestTemperatureEndpointMetrics(unittest.TestCase):
         from src.app import app
 
         mock_get_temp.return_value = None
-        
+
         # Record initial value
         initial_value = TEMPERATURE_REQUESTS_TOTAL.labels(
             status="no_data"
         )._value.get()
-        
+
         # Perform operation
         client = app.test_client()
         response = client.get("/temperature")
-        
+
         # Assert
         self.assertEqual(response.status_code, 503)
         final_value = TEMPERATURE_REQUESTS_TOTAL.labels(
@@ -195,11 +195,11 @@ class TestTemperatureEndpointMetrics(unittest.TestCase):
             status="Good",
             data_age_seconds=45.5,
         )
-        
+
         # Perform operation
         client = app.test_client()
         response = client.get("/temperature")
-        
+
         # Assert
         self.assertEqual(response.status_code, 200)
         gauge_value = TEMPERATURE_DATA_AGE_SECONDS._value.get()
@@ -216,7 +216,7 @@ class TestMetricsEndpoint(unittest.TestCase):
         client = app.test_client()
         response = client.get("/metrics")
         body = response.data.decode("utf-8")
-        
+
         # Check that all custom metrics are present
         self.assertIn("cache_hit_total", body)
         self.assertIn("cache_miss_total", body)

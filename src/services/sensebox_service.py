@@ -153,7 +153,10 @@ class SenseBoxService:
                     temperatures.append(temp_data["value"])
                     sources.append(box_id)
                     # Track the newest timestamp
-                    if newest_timestamp is None or temp_data["timestamp"] > newest_timestamp:
+                    if (
+                        newest_timestamp is None
+                        or temp_data["timestamp"] > newest_timestamp
+                    ):
                         newest_timestamp = temp_data["timestamp"]
 
         if not temperatures:

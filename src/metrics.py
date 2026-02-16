@@ -1,7 +1,7 @@
 """Custom Prometheus metrics for HiveBox application.
 
 This module defines all custom metrics following Prometheus best practices.
-All metrics are automatically registered with the default prometheus_client registry.
+All metrics are registered with the default prometheus_client registry.
 """
 
 from prometheus_client import Counter, Gauge

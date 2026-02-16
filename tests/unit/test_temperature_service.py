@@ -48,7 +48,11 @@ class TestTemperatureService(unittest.TestCase):
         mock_get_average,
         mock_collect,
     ):
-        mock_get_average.return_value = (22.456, ["box-1"], datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc))
+        mock_get_average.return_value = (
+            22.456,
+            ["box-1"],
+            datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        )
         mock_collect.return_value = TemperatureRecord(
             average_temperature=22.456,
             timestamp=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),

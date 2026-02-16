@@ -81,8 +81,8 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     Prefers fresh data from senseBoxes. Falls back to the latest MinIO record
     when live data is unavailable.
     """
-    average, sources, newest_timestamp = sensebox_service.get_average_temperature_with_sources(
-        SENSEBOX_IDS
+    average, sources, newest_timestamp = (
+        sensebox_service.get_average_temperature_with_sources(SENSEBOX_IDS)
     )
     used_fallback = False
     data_age_seconds = None
@@ -105,6 +105,7 @@ def get_latest_temperature_response() -> Optional[TemperatureResponse]:
     # Calculate data age if we have a timestamp
     if newest_timestamp is not None:
         from datetime import datetime, timezone
+
         now = datetime.now(timezone.utc)
         # Ensure both timestamps are timezone-aware
         if newest_timestamp.tzinfo is None:
@@ -142,8 +143,10 @@ def _deserialize_temperature_response(
 ) -> Optional[TemperatureResponse]:
     try:
         data_age_value = payload.get("data_age_seconds")
-        data_age_seconds = float(data_age_value) if data_age_value is not None else None
-        
+        data_age_seconds = (
+            float(data_age_value) if data_age_value is not None else None
+        )
+
         return TemperatureResponse(
             average_temperature=float(payload["average_temperature"]),
             status=str(payload["status"]),

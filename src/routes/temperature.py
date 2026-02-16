@@ -4,7 +4,10 @@ import logging
 
 from flask import Blueprint, jsonify
 
-from src.metrics import TEMPERATURE_REQUESTS_TOTAL, TEMPERATURE_DATA_AGE_SECONDS
+from src.metrics import (
+    TEMPERATURE_DATA_AGE_SECONDS,
+    TEMPERATURE_REQUESTS_TOTAL,
+)
 from src.services.temperature_service import (
     TemperatureService,
     get_latest_temperature_response_cached,
@@ -42,11 +45,11 @@ def temperature():
 
     try:
         TEMPERATURE_REQUESTS_TOTAL.labels(status="success").inc()
-        
+
         # Update temperature data age if available
         if response.data_age_seconds is not None:
             TEMPERATURE_DATA_AGE_SECONDS.set(response.data_age_seconds)
-        
+
         return jsonify({
             "average_temperature": response.average_temperature,
             "status": response.status,
