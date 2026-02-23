@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { include "hivebox.fullname" . } }
+  labels: { { - include "hivebox.labels" . | nindent 4 } }
+spec:
+  replicas: { { .Values.replicaCount } }
+  selector:
+    matchLabels: { { - include "hivebox.selectorLabels" . | nindent 6 } }
+  template:
+    metadata:
+      labels: { { - include "hivebox.selectorLabels" . | nindent 8 } }
+    spec:
+      containers:
+        - name: { { .Chart.Name } }
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: { { .Values.image.pullPolicy } }
+          env:
+            - name: MINIO_ENDPOINT
+              value: { { .Values.minio.endpoint } }
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: { { include "hivebox.fullname" . } }-minio-credentials
+                  key: accessKey
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: { { include "hivebox.fullname" . } }-minio-credentials
+                  key: secretKey
+            - name: MINIO_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: { { include "hivebox.fullname" . } }-minio-config
+                  key: bucket
+            - name: MINIO_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: { { include "hivebox.fullname" . } }-minio-config
+                  key: secure
+            - name: MINIO_CREATE_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: { { include "hivebox.fullname" . } }-minio-config
+                  key: createBucket
+            - name: VALKEY_HOST
+              value: { { .Values.valkey.host } }
+            - name: VALKEY_PORT
+              value: { { .Values.valkey.port | quote } }
+            - name: VALKEY_SSL
+              value: { { .Values.valkey.ssl | quote } }
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          ports:
+            - name: http
+              containerPort: { { .Values.service.port } }
+              protocol: TCP
+          resources: { { - toYaml .Values.resources | nindent 12 } }
+      volumes:
+        - name: tmp
+          emptyDir: {}
