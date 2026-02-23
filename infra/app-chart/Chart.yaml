@@ -1,0 +1,13 @@
+apiVersion: v2
+name: hivebox
+description: A Helm chart for Hivebox application
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - hivebox
+  - temperature
+  - minio
+  - valkey
+maintainers:
+  - name: DevOps Team

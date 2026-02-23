@@ -205,17 +205,21 @@ Exposes Prometheus metrics for the app.
 **Metrics:**
 
 **HTTP Request Metrics:**
+
 - `http_requests_total{method, path, status}` (counter) - Total HTTP requests
 - `http_request_duration_seconds{method, path, status}` (histogram) - HTTP request duration
 
 **Cache Performance Metrics:**
+
 - `cache_hit_total{type}` (counter) - Number of cache hits, labeled by cache type (e.g., `valkey`)
 - `cache_miss_total{type}` (counter) - Number of cache misses, labeled by cache type
 
 **Storage Operation Metrics:**
+
 - `storage_write_operations_total{type, status}` (counter) - Storage write operations, labeled by type (e.g., `minio`) and status (`success`, `failed`)
 
 **Temperature Workflow Metrics:**
+
 - `temperature_requests_total{status}` (counter) - Count of `/temperature` endpoint requests, labeled by outcome (`success`, `no_data`, `error`)
 - `temperature_data_age_seconds` (gauge) - Age in seconds of the most recent temperature value used
 
@@ -614,6 +618,41 @@ Delete the cluster when finished:
 
 ```bash
 kind delete cluster --name hivebox
+```
+
+### Helm Deployment
+
+**About Helm:** Helm is a package manager for Kubernetes that simplifies deploying and managing applications. It uses templates to generate Kubernetes manifests and allows you to configure applications through a `values.yaml` file.
+
+**Install from local directory:**
+
+```bash
+# Install with default values
+helm install hivebox ./infra/app-chart
+
+# Install with custom release name
+helm install my-hivebox ./infra/app-chart
+
+# Install in specific namespace
+helm install hivebox ./infra/app-chart --namespace hivebox --create-namespace
+
+# Install with custom values file
+helm install hivebox ./infra/app-chart --values custom-values.yaml
+
+# Override specific values via command line
+helm install hivebox ./infra/app-chart \
+  --set replicaCount=3 \
+  --set image.tag=v0.2.0
+```
+
+**Upgrade or uninstall:**
+
+```bash
+# Upgrade existing release
+helm upgrade hivebox ./infra/app-chart
+
+# Uninstall
+helm uninstall hivebox
 ```
 
 #### Basic API Tests
