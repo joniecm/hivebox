@@ -1,0 +1,77 @@
+replicaCount: 2
+
+image:
+  repository: hivebox
+  tag: v0.1.0
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: localhost
+      paths:
+        - path: /
+          pathType: Prefix
+
+minio:
+  endpoint: minio:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: hivebox
+  secure: "false"
+  createBucket: "true"
+
+valkey:
+  host: valkey
+  port: 6379
+  ssl: "false"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+networkPolicy:
+  enabled: true
+
+grafanaAgent:
+  enabled: false
+  logLevel: info
+  image:
+    repository: grafana/agent
+    tag: v0.44.5
+    pullPolicy: IfNotPresent
+  metrics:
+    scrapeInterval: 15s
+    scrapeTimeout: 10s
+  remoteWrite:
+    prometheus:
+      url: https://prometheus.example.com/api/prom/push
+      username: replace-me
+      password: replace-me
+    loki:
+      url: https://logs-prod-us-central1.grafana.net/loki/api/v1/push
+      username: replace-me
+      password: replace-me
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule

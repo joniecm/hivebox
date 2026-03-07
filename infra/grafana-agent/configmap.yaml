@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-agent-config
+  labels:
+    app: grafana-agent
+data:
+  agent.yaml: |
+    server:
+      log_level: info
+
+    metrics:
+      wal_directory: /var/lib/agent/wal
+      global:
+        scrape_interval: 15s
+        scrape_timeout: 10s
+      configs:
+        - name: app-metrics
+          remote_write:
+            - url: ${PROM_REMOTE_WRITE_URL}
+              basic_auth:
+                username: ${PROM_REMOTE_WRITE_USERNAME}
+                password: ${PROM_REMOTE_WRITE_PASSWORD}
+          scrape_configs:
+            - job_name: hivebox
+              metrics_path: /metrics
+              static_configs:
+                - targets:
+                    - hivebox.default.svc.cluster.local:5000
+                  labels:
+                    app: hivebox
+                    namespace: default
+
+    logs:
+      positions_directory: /var/lib/agent/positions
+      configs:
+        - name: app-logs
+          clients:
+            - url: ${LOKI_PUSH_URL}
+              basic_auth:
+                username: ${LOKI_USERNAME}
+                password: ${LOKI_PASSWORD}
+          scrape_configs:
+            - job_name: kubernetes-pods-hivebox
+              static_configs:
+                - targets: [localhost]
+                  labels:
+                    job: hivebox
+                    namespace: default
+                    __path__: /var/log/pods/default_hivebox*/*/*.log
+              pipeline_stages:
+                - cri: {}

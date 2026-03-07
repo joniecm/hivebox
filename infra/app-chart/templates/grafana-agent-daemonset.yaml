@@ -1,0 +1,61 @@
+{{- if .Values.grafanaAgent.enabled -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "hivebox.fullname" . }}-grafana-agent
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana-agent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hivebox.name" . }}-grafana-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hivebox.name" . }}-grafana-agent
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: grafana-agent
+    spec:
+      serviceAccountName: {{ include "hivebox.fullname" . }}-grafana-agent
+      tolerations:
+        {{- toYaml .Values.grafanaAgent.tolerations | nindent 8 }}
+      containers:
+        - name: grafana-agent
+          image: "{{ .Values.grafanaAgent.image.repository }}:{{ .Values.grafanaAgent.image.tag }}"
+          imagePullPolicy: {{ .Values.grafanaAgent.image.pullPolicy }}
+          args:
+            - -config.file=/etc/agent/agent.yaml
+            - -config.expand-env
+          envFrom:
+            - secretRef:
+                name: {{ include "hivebox.fullname" . }}-grafana-agent-remote-write
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.grafanaAgent.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/agent
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "hivebox.fullname" . }}-grafana-agent-config
+        - name: data
+          emptyDir: {}
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+{{- end }}
