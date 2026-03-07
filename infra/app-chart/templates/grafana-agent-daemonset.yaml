@@ -18,7 +18,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: grafana-agent
     spec:
-      serviceAccountName: {{ include "hivebox.fullname" . }}-grafana-agent
+      automountServiceAccountToken: false
       tolerations:
         {{- toYaml .Values.grafanaAgent.tolerations | nindent 8 }}
       containers:
@@ -37,8 +37,18 @@ spec:
             capabilities:
               drop:
                 - ALL
+          {{- $resources := .Values.grafanaAgent.resources | default dict }}
+          {{- $requests := $resources.requests | default dict }}
+          {{- $limits := $resources.limits | default dict }}
           resources:
-            {{- toYaml .Values.grafanaAgent.resources | nindent 12 }}
+            requests:
+              cpu: {{ index $requests "cpu" | default "100m" }}
+              memory: {{ index $requests "memory" | default "128Mi" }}
+              ephemeral-storage: {{ index $requests "ephemeral-storage" | default "256Mi" }}
+            limits:
+              cpu: {{ index $limits "cpu" | default "200m" }}
+              memory: {{ index $limits "memory" | default "256Mi" }}
+              ephemeral-storage: {{ index $limits "ephemeral-storage" | default "1Gi" }}
           volumeMounts:
             - name: config
               mountPath: /etc/agent
