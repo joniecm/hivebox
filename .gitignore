@@ -29,3 +29,11 @@ pip-wheel-metadata/
 
 # Logs
 *.log
+
+# Kubernetes secrets
+infra/grafana-agent/secret.yaml
+infra/grafana-agent/*.local.yaml
+
+# Helm local secret overrides
+infra/app-chart/values.local.yaml
+infra/app-chart/values.yaml

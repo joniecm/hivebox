@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: grafana-agent
+  labels:
+    app: grafana-agent
+spec:
+  selector:
+    matchLabels:
+      app: grafana-agent
+  template:
+    metadata:
+      labels:
+        app: grafana-agent
+    spec:
+      automountServiceAccountToken: false
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: grafana-agent
+          image: grafana/agent:v0.44.5
+          args:
+            - -config.file=/etc/agent/agent.yaml
+            - -config.expand-env
+          envFrom:
+            - secretRef:
+                name: grafana-agent-remote-write
+          ports:
+            - name: http
+              containerPort: 12345
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+              ephemeral-storage: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/agent
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: grafana-agent-config
+        - name: data
+          emptyDir: {}
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory

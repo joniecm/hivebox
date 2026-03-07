@@ -121,6 +121,7 @@ tasks:
       - task: wait-for-webhook
       - kubectl apply -f ./infra/minio/
       - kubectl apply -f ./infra/valkey/
+      - kubectl apply -f ./infra/grafana-agent/
       - kubectl apply -f ./infra/app/
       - echo "Waiting for deployments to be ready..."
       - task: wait-for-deployment
