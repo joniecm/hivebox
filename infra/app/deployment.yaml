@@ -79,7 +79,7 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 2
+            timeoutSeconds: 10
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
