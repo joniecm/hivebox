@@ -1,0 +1,55 @@
+{{- if .Values.grafanaAgent.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hivebox.fullname" . }}-grafana-agent-config
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana-agent
+data:
+  agent.yaml: |
+    server:
+      log_level: {{ .Values.grafanaAgent.logLevel }}
+
+    metrics:
+      wal_directory: /var/lib/agent/wal
+      global:
+        scrape_interval: {{ .Values.grafanaAgent.metrics.scrapeInterval }}
+        scrape_timeout: {{ .Values.grafanaAgent.metrics.scrapeTimeout }}
+      configs:
+        - name: app-metrics
+          remote_write:
+            - url: ${PROM_REMOTE_WRITE_URL}
+              basic_auth:
+                username: ${PROM_REMOTE_WRITE_USERNAME}
+                password: ${PROM_REMOTE_WRITE_PASSWORD}
+          scrape_configs:
+            - job_name: {{ include "hivebox.fullname" . }}
+              metrics_path: /metrics
+              static_configs:
+                - targets:
+                    - {{ include "hivebox.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+                  labels:
+                    app: {{ include "hivebox.name" . }}
+                    namespace: {{ .Release.Namespace }}
+
+    logs:
+      positions_directory: /var/lib/agent/positions
+      configs:
+        - name: app-logs
+          clients:
+            - url: ${LOKI_PUSH_URL}
+              basic_auth:
+                username: ${LOKI_USERNAME}
+                password: ${LOKI_PASSWORD}
+          scrape_configs:
+            - job_name: kubernetes-pods-{{ include "hivebox.fullname" . }}
+              static_configs:
+                - targets: [localhost]
+                  labels:
+                    job: {{ include "hivebox.fullname" . }}
+                    namespace: {{ .Release.Namespace }}
+                    __path__: /var/log/pods/{{ .Release.Namespace }}_{{ include "hivebox.fullname" . }}*/*/*.log
+              pipeline_stages:
+                - cri: {}
+{{- end }}

@@ -639,11 +639,19 @@ helm install hivebox ./infra/app-chart --namespace hivebox --create-namespace
 # Install with custom values file
 helm install hivebox ./infra/app-chart --values custom-values.yaml
 
+# Create a full template values file, then edit it with your settings
+cp infra/app-chart/values.example.yaml infra/app-chart/values.local.yaml
+
+# Install using the template-based local values file
+helm install hivebox ./infra/app-chart --values infra/app-chart/values.local.yaml
+
 # Override specific values via command line
 helm install hivebox ./infra/app-chart \
   --set replicaCount=3 \
   --set image.tag=v0.2.0
 ```
+
+Use `infra/app-chart/values.example.yaml` as the full template for local configuration (including Grafana Agent values).
 
 **Upgrade or uninstall:**
 
@@ -654,6 +662,23 @@ helm upgrade hivebox ./infra/app-chart
 # Uninstall
 helm uninstall hivebox
 ```
+
+### Grafana Agent (App-only)
+
+This project includes a Grafana Agent setup for both metrics scraping and log collection, scoped to the app only.
+
+- Metrics: scrapes only the HiveBox `/metrics` endpoint.
+- Logs: keeps only pod logs for the HiveBox app.
+
+Manifests for plain Kubernetes deployment are in `infra/grafana-agent/` and are applied by `task kind:deploy`.
+
+For Helm installs, the same setup is configurable via the template file `infra/app-chart/values.example.yaml` (copy it locally and set `grafanaAgent` values):
+
+- `grafanaAgent.enabled`
+- `grafanaAgent.remoteWrite.prometheus.*`
+- `grafanaAgent.remoteWrite.loki.*`
+
+Replace the placeholder remote-write URLs and credentials with your Grafana Cloud values before deploying.
 
 #### Basic API Tests
 

@@ -159,6 +159,7 @@ tasks:
       - task: wait-for-ingress-webhook
       - kubectl apply -f ./infra/minio/
       - kubectl apply -f ./infra/valkey/
+      - kubectl apply -f ./infra/grafana-agent/
       - kubectl apply -f ./infra/app/
       - cmd: kubectl set image deployment/hivebox hivebox={{.IMAGE}} -n {{.APP_NAMESPACE}}
         when: "{{.IMAGE}}"
