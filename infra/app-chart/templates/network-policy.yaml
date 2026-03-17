@@ -14,7 +14,10 @@ spec:
     - Egress
   ingress:
     - from:
-        - namespaceSelector: {}
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: {{ .Values.service.port }}

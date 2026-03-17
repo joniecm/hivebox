@@ -7,6 +7,8 @@ vars:
   APP_NAMESPACE: default
   MINIO_NAMESPACE: default
   VALKEY_NAMESPACE: default
+  TF_DIR: ./infra/terraform
+  AKS_IMAGE: ghcr.io/joniecm/hivebox:latest
 
 tasks:
   install:
@@ -79,18 +81,45 @@ tasks:
       - docker stop hivebox-minio
       - docker stop hivebox-valkey
 
+  aks:create:
+    desc: Create/Update AKS cluster with Terraform
+    cmds:
+      - terraform -chdir={{.TF_DIR}} init
+      - terraform -chdir={{.TF_DIR}} apply
+      - az aks get-credentials --resource-group rg-hivebox-aks --name aks-hivebox --file ~/.kube/config-aks-hivebox --overwrite-existing
+
+  aks:destroy:
+    desc: Destroy AKS cluster with Terraform
+    cmds:
+      - terraform -chdir={{.TF_DIR}} destroy
+
+  aks:set-kubeconfig:
+    desc: Set kubeconfig for AKS cluster as current context for local kubectl
+    cmds:
+      - cp ~/.kube/config-aks-hivebox ~/.kube/config
+
+  aks:deploy:
+    desc: Deploy app to AKS using public GHCR image
+    cmds:
+      - task: k8s:deploy
+        vars:
+          IMAGE: "{{.AKS_IMAGE}}"
+          INGRESS_PROVIDER: cloud
+      - |
+        ip=$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        echo "Web app should be accessible at http://$ip/"
+
   kind:create:
     desc: Create kind cluster
     cmds:
       - kind create cluster --config ./infra/kind-config.yaml --name {{.KIND_CLUSTER}}
-
-  kind:create-with-kubeconfig:
-    desc: Create kind cluster and save kubeconfig to ~/.kube/config
-    deps:
-      - kind:create
-    cmds:
       - kind get kubeconfig --name {{.KIND_CLUSTER}} > ~/.kube/config-{{.KIND_CLUSTER}}
       - echo "Cluster created! Kubeconfig saved to ~/.kube/config-{{.KIND_CLUSTER}}"
+
+  kind:set-kubeconfig:
+    desc: Set kubeconfig for kind cluster as current context for local kubectl
+    cmds:
+      - cp ~/.kube/config-{{.KIND_CLUSTER}} ~/.kube/config
 
   kind:load:
     desc: Load Docker image into kind
@@ -112,16 +141,27 @@ tasks:
     deps:
       - kind:load
     cmds:
-      - kubectl apply -k ./infra/ingress-nginx
+      - task: k8s:deploy
+        vars:
+          INGRESS_PROVIDER: kind
+      - echo "Deployment complete! Access the app at http://localhost:4080/version"
+
+  k8s:deploy:
+    internal: true
+    cmds:
+      - kubectl label nodes --all ingress-ready=true
+      - kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/{{.INGRESS_PROVIDER}}/deploy.yaml
       - task: wait-for-deployment
         vars:
           DEPLOYMENT: ingress-nginx-controller
           NAMESPACE: "ingress-nginx"
       - echo "Waiting for ingress webhook to be ready..."
-      - task: wait-for-webhook
+      - task: wait-for-ingress-webhook
       - kubectl apply -f ./infra/minio/
       - kubectl apply -f ./infra/valkey/
       - kubectl apply -f ./infra/app/
+      - cmd: kubectl set image deployment/hivebox hivebox={{.IMAGE}} -n {{.APP_NAMESPACE}}
+        when: "{{.IMAGE}}"
       - echo "Waiting for deployments to be ready..."
       - task: wait-for-deployment
         vars:
@@ -135,7 +175,6 @@ tasks:
         vars:
           DEPLOYMENT: valkey
           NAMESPACE: "{{.VALKEY_NAMESPACE}}"
-      - echo "Deployment complete! Access the app at http://localhost:4080/version"
 
   wait-for-deployment:
     internal: true
@@ -143,7 +182,7 @@ tasks:
       - kubectl wait --for=condition=available --timeout=120s deployment/{{.DEPLOYMENT}} -n {{.NAMESPACE}}
     ignore_error: true
 
-  wait-for-webhook:
+  wait-for-ingress-webhook:
     internal: true
     cmds:
       - kubectl wait --for=condition=ready --timeout=60s pod -l app.kubernetes.io/component=controller -n ingress-nginx
