@@ -1,0 +1,44 @@
+name: HiveBox Store Workflow E2E
+
+description: |
+  End-to-end checks for /store behavior.
+  This suite validates flush contracts for configured and misconfigured
+  storage environments.
+
+vars:
+  base_url: ""
+  http_timeout_seconds: 15
+  http_retry: 10
+  http_delay_seconds: 1
+
+testcases:
+  - name: Store endpoint accepts flush requests with documented contract
+    steps:
+      - type: http
+        method: POST
+        url: "{{.base_url}}/store"
+        timeout: "{{.http_timeout_seconds}}"
+        retry: "{{.http_retry}}"
+        delay: "{{.http_delay_seconds}}"
+        assertions:
+          - or:
+              - result.statuscode ShouldEqual 200
+              - result.statuscode ShouldEqual 503
+          - or:
+              - result.bodyjson ShouldContainKey flushed
+              - result.bodyjson.error ShouldEqual "MinIO not configured"
+          - or:
+              - result.bodyjson.message ShouldEqual "Unable to flush temperature data to MinIO."
+              - result.bodyjson.flushed ShouldBeGreaterThanOrEqualTo 0
+
+  - name: Store endpoint is stable across repeated flush attempts
+    steps:
+      - type: http
+        method: POST
+        url: "{{.base_url}}/store"
+        timeout: "{{.http_timeout_seconds}}"
+        assertions:
+          - or:
+              - result.statuscode ShouldEqual 200
+              - result.statuscode ShouldEqual 503
+          - result.timeseconds ShouldBeLessThan 5

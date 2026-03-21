@@ -36,7 +36,7 @@ Here is a pre-start checklist:
 
 - [Create GitHub account](https://docs.github.com/en/get-started/start-your-journey/creating-an-account-on-github) (if you don't have one), then [fork this repository](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork) and start from there.
 - [Create GitHub project board](https://docs.github.com/en/issues/planning-and-tracking-with-projects/creating-projects/creating-a-project) for this repository (use `Kanban` template).
-- Each phase should be presented as a pull request against the `main` branch. Don’t push directly to the main branch!
+- Each phase should be presented as a pull request against the `main` branch. Don't push directly to the main branch!
 - Document as you go. Always assume that someone else will read your project at any phase.
 - You can get senseBox IDs by checking the [openSenseMap](https://opensensemap.org/) website. Use 3 senseBox IDs close to each other (you can use the following [5eba5fbad46fb8001b799786](https://opensensemap.org/explore/5eba5fbad46fb8001b799786), [5c21ff8f919bf8001adf2488](https://opensensemap.org/explore/5c21ff8f919bf8001adf2488), and [5ade1acf223bd80019a1011c](https://opensensemap.org/explore/5ade1acf223bd80019a1011c)). Just copy the IDs, you will need them in the next steps.
 
@@ -66,3 +66,4 @@ curl http://localhost:5000/version
 | [API Reference](docs/api.md) | All endpoint details, request/response examples, and status codes |
 | [Development Guide](docs/development.md) | Project structure, versioning, local setup, Docker, Taskfile, and code quality |
 | [Deployment Guide](docs/deployment.md) | Kubernetes (kind), Helm, Grafana Agent, and security scanning |
+| [E2E Testing with Venom](docs/e2e-testing-with-venom.md) | End-to-end API test setup, suites, and CI integration |

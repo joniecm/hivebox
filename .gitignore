@@ -30,6 +30,9 @@ pip-wheel-metadata/
 # Logs
 *.log
 
+# Venom E2E artifacts
+tests/e2e/results/
+
 # Terraform
 .terraform/
 *.tfstate

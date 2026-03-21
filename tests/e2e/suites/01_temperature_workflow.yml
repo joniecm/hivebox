@@ -1,0 +1,59 @@
+name: HiveBox Temperature Workflow E2E
+
+description: |
+  End-to-end checks for /temperature behavior.
+  This suite validates both success and no-data contracts because
+  external SenseBox API availability can vary by environment.
+
+vars:
+  base_url: ""
+  http_timeout_seconds: 15
+  http_retry: 10
+  http_delay_seconds: 1
+
+testcases:
+  - name: API preflight using version endpoint
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/version"
+        timeout: "{{.http_timeout_seconds}}"
+        retry: "{{.http_retry}}"
+        delay: "{{.http_delay_seconds}}"
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson ShouldContainKey version
+          - result.bodyjson.version ShouldNotBeEmpty
+
+  - name: Temperature endpoint returns documented response contract
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/temperature"
+        timeout: "{{.http_timeout_seconds}}"
+        retry: "{{.http_retry}}"
+        delay: "{{.http_delay_seconds}}"
+        assertions:
+          - or:
+              - result.statuscode ShouldEqual 200
+              - result.statuscode ShouldEqual 503
+          - or:
+              - result.bodyjson ShouldContainKey average_temperature
+              - result.bodyjson.error ShouldEqual "No temperature data available"
+          - or:
+              - result.bodyjson.status ShouldEqual "Too Cold"
+              - result.bodyjson.status ShouldEqual "Good"
+              - result.bodyjson.status ShouldEqual "Too Hot"
+              - result.bodyjson.error ShouldEqual "No temperature data available"
+
+  - name: Temperature endpoint returns JSON quickly
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/temperature"
+        timeout: "{{.http_timeout_seconds}}"
+        assertions:
+          - result.timeseconds ShouldBeLessThan 5
+          - or:
+              - result.statuscode ShouldEqual 200
+              - result.statuscode ShouldEqual 503
