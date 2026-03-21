@@ -31,8 +31,9 @@ tests/
 ### Linux/macOS
 
 ```bash
-curl -L https://github.com/ovh/venom/releases/download/v1.3.0/venom.linux-amd64 -o /usr/local/bin/venom
-chmod +x /usr/local/bin/venom
+curl -L https://github.com/ovh/venom/releases/download/v1.3.0/venom.linux-amd64 -o ./venom
+chmod +x ./venom
+sudo mv ./venom /usr/local/bin/venom
 venom version
 ```
 
