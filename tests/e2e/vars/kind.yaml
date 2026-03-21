@@ -1,0 +1,4 @@
+base_url: http://localhost:4080
+http_timeout_seconds: 15
+http_retry: 15
+http_delay_seconds: 2

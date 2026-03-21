@@ -686,3 +686,65 @@ The CI pipeline validates the `/version` endpoint response against the
 `VERSION` constant in `version.py`. The expected value is derived directly
 from that constant for the current build. If the endpoint returns a different
 value, the CI job fails.
+
+### End-to-End (E2E) Tests with Venom
+
+HiveBox uses [Venom](https://github.com/ovh/venom) for API-focused E2E testing.
+
+#### Install Venom
+
+Install the Venom CLI and verify it is available in your `PATH`.
+
+**macOS (Homebrew):**
+
+```bash
+brew install venom
+```
+
+**Linux (download latest release):**
+
+```bash
+curl -L https://github.com/ovh/venom/releases/latest/download/venom.linux-amd64 -o venom
+chmod +x venom
+sudo mv venom /usr/local/bin/venom
+```
+
+**Windows (Scoop):**
+
+```powershell
+scoop install venom
+```
+
+Verify installation:
+
+```bash
+venom version
+```
+
+Current E2E coverage includes:
+
+- Temperature retrieval workflow (`GET /temperature`)
+- Store flush workflow (`POST /store`)
+
+E2E suites and environment profiles are located under:
+
+- `tests/e2e/suites/`
+- `tests/e2e/vars/`
+
+Run E2E suites:
+
+```bash
+# KinD profile (http://localhost:4080)
+task test:e2e:venom:kind
+
+# Local profile (http://localhost:5000)
+task test:e2e:venom:local
+
+# Staging profile (endpoint from env var)
+VENOM_BASE_URL=https://your-staging-hivebox.example.com task test:e2e:venom:staging
+```
+
+By default, Venom test reports are exported to `tests/e2e/results/`.
+
+For setup details, assertions strategy, CI behavior, and maintenance guidance,
+see [docs/e2e-testing-with-venom.md](docs/e2e-testing-with-venom.md).

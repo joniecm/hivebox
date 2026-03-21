@@ -1,0 +1,5 @@
+# Copy this file to staging.yaml and set your staging endpoint.
+base_url: https://your-staging-hivebox.example.com
+http_timeout_seconds: 20
+http_retry: 8
+http_delay_seconds: 2
