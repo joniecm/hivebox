@@ -1,8 +1,10 @@
+{{- if .Values.minio.deploy -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minio
   labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
     app: minio
 spec:
   replicas: 1
@@ -23,8 +25,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+          imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
           args:
             - server
             - /data
@@ -34,12 +36,12 @@ spec:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: minio-credentials
+                  name: {{ include "hivebox.fullname" . }}-minio-credentials
                   key: accessKey
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: minio-credentials
+                  name: {{ include "hivebox.fullname" . }}-minio-credentials
                   key: secretKey
           ports:
             - name: api
@@ -67,14 +69,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
-              ephemeral-storage: "64Mi"
-            limits:
-              cpu: "300m"
-              memory: "512Mi"
-              ephemeral-storage: "256Mi"
+            {{- toYaml .Values.minio.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -89,6 +84,7 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: minio-data
+            claimName: {{ include "hivebox.fullname" . }}-minio-data
         - name: tmp
           emptyDir: {}
+{{- end }}

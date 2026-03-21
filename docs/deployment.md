@@ -20,29 +20,23 @@ Install Ingress-NGINX:
 kubectl apply -k ./infra/ingress-nginx
 ```
 
-Deploy MinIO:
-
-```bash
-kubectl apply -f ./infra/minio/
-```
-
 Load the locally built image into kind:
 
 ```bash
 kind load docker-image hivebox:v0.1.0 --name hivebox
 ```
 
-Note: If you're using a locally built image with tag `hivebox:latest`, you'll need to update the deployment.yaml image reference or tag your image as `v0.1.0`:
+Note: If you're using a locally built image with tag `hivebox:latest`, you'll need to tag your image as `v0.1.0`:
 
 ```bash
 docker tag hivebox:latest hivebox:v0.1.0
 kind load docker-image hivebox:v0.1.0 --name hivebox
 ```
 
-Deploy the app manifests:
+Deploy all resources (app, MinIO, Valkey) using Helm:
 
 ```bash
-kubectl apply -f ./infra/app/
+helm install hivebox ./infra/app-chart
 ```
 
 Verify the deployment:
@@ -68,6 +62,8 @@ kind delete cluster --name hivebox
 ## Helm Deployment
 
 **About Helm:** Helm is a package manager for Kubernetes that simplifies deploying and managing applications. It uses templates to generate Kubernetes manifests and allows you to configure applications through a `values.yaml` file.
+
+This project uses Helm exclusively for all Kubernetes deployments. The chart at `infra/app-chart/` manages all resources: the HiveBox app, MinIO, Valkey, Ingress, NetworkPolicy, and optionally the Grafana Agent.
 
 **Install from local directory:**
 
@@ -117,9 +113,7 @@ This project includes a Grafana Agent setup for both metrics scraping and log co
 - Metrics: scrapes only the HiveBox `/metrics` endpoint.
 - Logs: keeps only pod logs for the HiveBox app.
 
-Manifests for plain Kubernetes deployment are in `infra/grafana-agent/` and are applied by `task kind:deploy`.
-
-For Helm installs, the same setup is configurable via the template file `infra/app-chart/values.example.yaml` (copy it locally and set `grafanaAgent` values):
+The Grafana Agent is configurable via the Helm chart using `infra/app-chart/values.example.yaml` (copy it locally and set `grafanaAgent` values):
 
 - `grafanaAgent.enabled`
 - `grafanaAgent.remoteWrite.prometheus.*`
@@ -142,13 +136,14 @@ pip install checkov
 **Run security scan:**
 
 ```bash
-# Scan all Kubernetes manifests
-checkov --directory infra/app/ --framework kubernetes
+# Scan Helm chart templates
+checkov --directory infra/app-chart/templates/ --framework kubernetes
 
 # Compact output
-checkov --directory infra/app/ --framework kubernetes --compact
+checkov --directory infra/app-chart/templates/ --framework kubernetes --compact
 ```
 
-**Automated scanning:** Checkov runs automatically on pull requests and pushes to main when Kubernetes manifests change. Results are available in the GitHub Security tab.
+**Automated scanning:** Checkov runs automatically on pull requests and pushes to main when Helm chart files change. Results are available in the GitHub Security tab.
 
 For detailed security scan results, remediation actions, and security best practices, see [SECURITY.md](../SECURITY.md).
+
