@@ -67,3 +67,4 @@ curl http://localhost:5000/version
 | [Development Guide](docs/development.md) | Project structure, versioning, local setup, Docker, Taskfile, and code quality |
 | [Deployment Guide](docs/deployment.md) | Kubernetes (kind), Helm, Grafana Agent, and security scanning |
 | [E2E Testing with Venom](docs/e2e-testing-with-venom.md) | End-to-end API test setup, suites, and CI integration |
+| [Dependabot](docs/dependabot.md) | Automated dependency updates configuration and usage |
