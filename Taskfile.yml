@@ -37,6 +37,37 @@ tasks:
     cmds:
       - pytest tests/ -v
 
+  test:e2e:venom:
+    desc: Run Venom E2E suites (set VENOM_VARS_FILE or use profile)
+    vars:
+      VENOM_VARS_FILE: '{{default "tests/e2e/vars/kind.yaml" .VENOM_VARS_FILE}}'
+    cmds:
+      - mkdir -p tests/e2e/results
+      - venom run tests/e2e/suites/*.yml --var-from-file {{.VENOM_VARS_FILE}} --format=xml --output-dir=tests/e2e/results
+
+  test:e2e:venom:local:
+    desc: Run Venom E2E suites against local app (localhost:5000)
+    cmds:
+      - task: test:e2e:venom
+        vars:
+          VENOM_VARS_FILE: tests/e2e/vars/local.yaml
+
+  test:e2e:venom:kind:
+    desc: Run Venom E2E suites against KinD ingress (localhost:4080)
+    cmds:
+      - task: test:e2e:venom
+        vars:
+          VENOM_VARS_FILE: tests/e2e/vars/kind.yaml
+
+  test:e2e:venom:staging:
+    desc: Run Venom E2E suites against staging (set VENOM_BASE_URL)
+    requires:
+      vars:
+        - VENOM_BASE_URL
+    cmds:
+      - mkdir -p tests/e2e/results
+      - venom run tests/e2e/suites/*.yml --var base_url={{.VENOM_BASE_URL}} --format=xml --output-dir=tests/e2e/results
+
   run:
     desc: Run the app locally
     env:
@@ -143,6 +174,7 @@ tasks:
     cmds:
       - task: k8s:deploy
         vars:
+          IMAGE: "hivebox:v0.1.0"
           INGRESS_PROVIDER: kind
       - echo "Deployment complete! Access the app at http://localhost:4080/version"
 

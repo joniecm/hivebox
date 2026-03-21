@@ -1,0 +1,4 @@
+base_url: http://localhost:5000
+http_timeout_seconds: 15
+http_retry: 10
+http_delay_seconds: 1
