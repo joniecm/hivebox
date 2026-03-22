@@ -1,57 +1,51 @@
 [![Dynamic DevOps Roadmap](https://img.shields.io/badge/Dynamic_DevOps_Roadmap-559e11?style=for-the-badge&logo=Vercel&logoColor=white)](https://devopsroadmap.io/getting-started/)
-[![Community](https://img.shields.io/badge/Join_Community-%23FF6719?style=for-the-badge&logo=substack&logoColor=white)](https://newsletter.devopsroadmap.io/subscribe)
-[![Telegram Group](https://img.shields.io/badge/Telegram_Group-%232ca5e0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/DevOpsHive/985)
-[![Fork on GitHub](https://img.shields.io/badge/Fork_On_GitHub-%2336465D?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork)
 
-# HiveBox - DevOps End-to-End Hands-On Project
+# HiveBox | End-to-End DevOps Project
 
-<p align="center">
-  <a href="https://devopsroadmap.io/projects/hivebox" style="display: block; padding: .5em 0; text-align: center;">
-    <img alt="HiveBox - DevOps End-to-End Hands-On Project" border="0" width="90%" src="https://devopsroadmap.io/img/projects/hivebox-devops-end-to-end-project.png" />
-  </a>
-</p>
+Production-style backend and platform project that covers practical DevOps skills across the full SDLC:
+application development, observability, automated testing, containerization, Kubernetes deployment, and infrastructure as code.
 
-> [!CAUTION] > **[Fork](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork)** this repo, and create PRs in your fork, **NOT** in this repo!
+## Highlights
 
-> [!TIP]
-> If you are looking for the full roadmap, including this project, go back to the [getting started](https://devopsroadmap.io/getting-started) page.
+- Flask API with real external data integration (openSenseMap) and resilient fallback behavior.
+- Cache layer (Valkey / Redis-compatible) and object storage (MinIO) for persistence.
+- Prometheus metrics and Grafana Agent manifests for metrics/log forwarding.
+- Multi-layer automated testing: unit, integration, and end-to-end (Venom).
+- Taskfile-driven workflows for linting, testing, building, and deploying.
+- Deploy targets: local Kubernetes (kind), Helm chart, and cloud (AKS via Terraform).
+- Clean route/service separation, background data flushing, and dependency-aware readiness checks.
 
-This repository is the starting point for [HiveBox](https://devopsroadmap.io/projects/hivebox/), the end-to-end hands-on project.
+## System Overview
 
-You can fork this repository and start implementing the [HiveBox](https://devopsroadmap.io/projects/hivebox/) project. HiveBox project follows the same Dynamic MVP-style mindset used in the [roadmap](https://devopsroadmap.io/).
+### Core flow
 
-The project aims to cover the whole Software Development Life Cycle (SDLC). That means each phase will cover all aspects of DevOps, such as planning, coding, containers, testing, continuous integration, continuous delivery, infrastructure, etc.
+1. API receives a request (for example `/temperature`).
+2. Service fetches/aggregates data from openSenseMap.
+3. Latest values can be served from cache (Valkey) when appropriate.
+4. Buffered records are persisted to object storage (MinIO).
+5. Metrics are exported to `/metrics` and can be scraped/forwarded by Grafana Agent.
 
-Happy DevOpsing ♾️
+### Key endpoints
 
-## Before you start
+- `GET /version` - application version
+- `GET /temperature` - latest average temperature and status (`Too Cold`, `Good`, `Too Hot`)
+- `POST /store` - flush buffered temperature data to MinIO
+- `GET /metrics` - Prometheus metrics
+- `GET /readyz` - readiness status for Kubernetes and health checks
 
-Here is a pre-start checklist:
+## Tech Stack
 
-- ⭐ <a target="_blank" href="https://github.com/DevOpsHiveHQ/dynamic-devops-roadmap">Star the **roadmap** repo</a> on GitHub for better visibility.
-- ✉️ <a target="_blank" href="https://newsletter.devopsroadmap.io/subscribe">Join the community</a> for the project community activities, which include mentorship, job posting, online meetings, workshops, career tips and tricks, and more.
-- 🌐 <a target="_blank" href="https://t.me/DevOpsHive/985">Join the Telegram group</a> for interactive communication.
+| Area                       | Technologies                                  |
+| -------------------------- | --------------------------------------------- |
+| Backend                    | Python, Flask, Requests                       |
+| Storage & Cache            | MinIO (S3-compatible), Valkey/Redis           |
+| Observability              | Prometheus metrics, Grafana Agent             |
+| Testing                    | Pytest (unit/integration), Venom (E2E API)    |
+| Containers & Orchestration | Docker, Kubernetes (kind), Helm               |
+| Infrastructure as Code     | Terraform (AKS workflow)                      |
+| Developer Experience       | Taskfile automation, HTTP request collections |
 
-## Preparation
-
-- [Create GitHub account](https://docs.github.com/en/get-started/start-your-journey/creating-an-account-on-github) (if you don't have one), then [fork this repository](https://github.com/DevOpsHiveHQ/devops-hands-on-project-hivebox/fork) and start from there.
-- [Create GitHub project board](https://docs.github.com/en/issues/planning-and-tracking-with-projects/creating-projects/creating-a-project) for this repository (use `Kanban` template).
-- Each phase should be presented as a pull request against the `main` branch. Don't push directly to the main branch!
-- Document as you go. Always assume that someone else will read your project at any phase.
-- You can get senseBox IDs by checking the [openSenseMap](https://opensensemap.org/) website. Use 3 senseBox IDs close to each other (you can use the following [5eba5fbad46fb8001b799786](https://opensensemap.org/explore/5eba5fbad46fb8001b799786), [5c21ff8f919bf8001adf2488](https://opensensemap.org/explore/5c21ff8f919bf8001adf2488), and [5ade1acf223bd80019a1011c](https://opensensemap.org/explore/5ade1acf223bd80019a1011c)). Just copy the IDs, you will need them in the next steps.
-
-<br/>
-<p align="center">
-  <a href="https://devopsroadmap.io/projects/hivebox/" imageanchor="1">
-    <img src="https://img.shields.io/badge/Get_Started_Now-559e11?style=for-the-badge&logo=Vercel&logoColor=white" />
-  </a><br/>
-</p>
-
----
-
-## Implementation
-
-### Quick Start
+## Quick Start (Local)
 
 ```bash
 pip install -r requirements.txt
@@ -59,12 +53,63 @@ python -m src.app
 curl http://localhost:5000/version
 ```
 
-### Documentation
+## Typical Commands
 
-| Topic | Description |
-|-------|-------------|
-| [API Reference](docs/api.md) | All endpoint details, request/response examples, and status codes |
-| [Development Guide](docs/development.md) | Project structure, versioning, local setup, Docker, Taskfile, and code quality |
-| [Deployment Guide](docs/deployment.md) | Kubernetes (kind), Helm, Grafana Agent, and security scanning |
-| [E2E Testing with Venom](docs/e2e-testing-with-venom.md) | End-to-end API test setup, suites, and CI integration |
-| [Dependabot](docs/dependabot.md) | Automated dependency updates configuration and usage |
+```bash
+# Quality
+task lint
+task test:unit
+task test:integration
+task test:all
+
+# End-to-end tests
+task test:e2e:venom:local
+task test:e2e:venom:kind
+
+# Local app runtime
+task run
+
+# Docker
+task docker:build
+
+# Local Kubernetes
+task kind:create
+task kind:deploy
+task kind:delete
+```
+
+## Deployment Targets
+
+- **Local cluster:** kind manifests in `infra/`
+- **Templated deployment:** Helm chart in `infra/app-chart/`
+- **Cloud path:** Terraform + AKS setup in `infra/terraform/`
+
+## Repository Map
+
+```text
+src/
+routes/       # HTTP endpoints (Blueprints)
+services/     # Business logic and integrations
+background/   # Periodic/background jobs
+tests/
+unit/         # Fast isolated tests
+integration/  # API-level and integration checks
+e2e/          # Venom suites and vars
+infra/
+app/          # Kubernetes manifests
+app-chart/    # Helm chart
+terraform/    # AKS IaC
+```
+
+## Dependency Updates
+
+Dependencies (pip, GitHub Actions, Docker, Terraform) are kept up-to-date automatically via [Dependabot](.github/dependabot.yml), which opens weekly pull requests for each ecosystem.
+
+## Documentation
+
+| Topic                                                    | Description                                |
+| -------------------------------------------------------- | ------------------------------------------ |
+| [API Reference](docs/api.md)                             | Endpoints, payloads, status codes          |
+| [Development Guide](docs/development.md)                 | Local setup, structure, testing, tooling   |
+| [Deployment Guide](docs/deployment.md)                   | kind, Helm, Grafana Agent, security checks |
+| [E2E Testing with Venom](docs/e2e-testing-with-venom.md) | End-to-end suite design and usage          |
