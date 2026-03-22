@@ -14,6 +14,7 @@ application development, observability, automated testing, containerization, Kub
 - Taskfile-driven workflows for linting, testing, building, and deploying.
 - Deploy targets: local Kubernetes (kind), Helm chart, and cloud (AKS via Terraform).
 - Clean route/service separation, background data flushing, and dependency-aware readiness checks.
+- Automated dependency updates across all ecosystems via Dependabot.
 
 ## System Overview
 
@@ -88,22 +89,18 @@ task kind:delete
 
 ```text
 src/
-routes/       # HTTP endpoints (Blueprints)
-services/     # Business logic and integrations
-background/   # Periodic/background jobs
+	routes/       # HTTP endpoints (Blueprints)
+	services/     # Business logic and integrations
+	background/   # Periodic/background jobs
 tests/
-unit/         # Fast isolated tests
-integration/  # API-level and integration checks
-e2e/          # Venom suites and vars
+	unit/         # Fast isolated tests
+	integration/  # API-level and integration checks
+	e2e/          # Venom suites and vars
 infra/
-app/          # Kubernetes manifests
-app-chart/    # Helm chart
-terraform/    # AKS IaC
+	app/          # Kubernetes manifests
+	app-chart/    # Helm chart
+	terraform/    # AKS IaC
 ```
-
-## Dependency Updates
-
-Dependencies (pip, GitHub Actions, Docker, Terraform) are kept up-to-date automatically via [Dependabot](.github/dependabot.yml), which opens weekly pull requests for each ecosystem.
 
 ## Documentation
 
