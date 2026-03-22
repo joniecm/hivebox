@@ -14,6 +14,7 @@ application development, observability, automated testing, containerization, Kub
 - Taskfile-driven workflows for linting, testing, building, and deploying.
 - Deploy targets: local Kubernetes (kind), Helm chart, and cloud (AKS via Terraform).
 - Clean route/service separation, background data flushing, and dependency-aware readiness checks.
+- Automated dependency updates across all ecosystems via Dependabot.
 
 ## System Overview
 
