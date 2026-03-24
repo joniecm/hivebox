@@ -3,18 +3,14 @@ name: Checkov Security Scan
 on:
   pull_request:
     paths:
-      - "infra/app/**/*.yaml"
-      - "infra/app/**/*.yml"
-      - "infra/minio/**/*.yaml"
-      - "infra/minio/**/*.yml"
+      - "infra/app-chart/**/*.yaml"
+      - "infra/app-chart/**/*.yml"
       - ".github/workflows/checkov-security-scan.yml"
   push:
     branches: [main]
     paths:
-      - "infra/app/**/*.yaml"
-      - "infra/app/**/*.yml"
-      - "infra/minio/**/*.yaml"
-      - "infra/minio/**/*.yml"
+      - "infra/app-chart/**/*.yaml"
+      - "infra/app-chart/**/*.yml"
       - ".github/workflows/checkov-security-scan.yml"
   workflow_dispatch:
 
@@ -38,10 +34,9 @@ jobs:
         run: |
           pip install checkov
 
-      - name: Run Checkov scan on Kubernetes manifests
+      - name: Run Checkov scan on Helm chart templates
         run: |
-          checkov --directory infra/app/ \
-            --directory infra/minio/ \
+          checkov --directory infra/app-chart/templates/ \
             --framework kubernetes \
             --output cli \
             --output sarif \
@@ -61,6 +56,7 @@ jobs:
         run: |
           echo "### Checkov Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Scanned Kubernetes manifests in \`infra/app/\` and \`infra/minio/\` directories." >> $GITHUB_STEP_SUMMARY
+          echo "Scanned Kubernetes manifests in \`infra/app-chart/templates/\` directory." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "For detailed results, check the Security tab in the repository." >> $GITHUB_STEP_SUMMARY
+

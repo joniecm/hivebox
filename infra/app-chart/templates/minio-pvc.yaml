@@ -1,0 +1,15 @@
+{{- if .Values.minio.deploy -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hivebox.fullname" . }}-minio-data
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+    app: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.minio.storage }}
+{{- end }}

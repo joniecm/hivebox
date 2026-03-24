@@ -19,17 +19,46 @@ ingress:
           pathType: Prefix
 
 minio:
+  deploy: true
+  image:
+    repository: minio/minio
+    tag: RELEASE.2025-09-07T16-13-09Z
+    pullPolicy: IfNotPresent
+  storage: 5Gi
   endpoint: minio:9000
   accessKey: minioadmin
   secretKey: minioadmin
   bucket: hivebox
   secure: "false"
   createBucket: "true"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+      ephemeral-storage: 64Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+      ephemeral-storage: 256Mi
 
 valkey:
+  deploy: true
+  image:
+    repository: valkey/valkey
+    tag: 7.2.6
+    pullPolicy: IfNotPresent
   host: valkey
   port: 6379
   ssl: "false"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+      ephemeral-storage: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 256Mi
 
 resources:
   requests:

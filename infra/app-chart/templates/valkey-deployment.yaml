@@ -1,8 +1,10 @@
+{{- if .Values.valkey.deploy -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: valkey
   labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
     app: valkey
 spec:
   replicas: 1
@@ -23,8 +25,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: valkey
-          image: valkey/valkey:7.2.6
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.valkey.image.repository }}:{{ .Values.valkey.image.tag }}"
+          imagePullPolicy: {{ .Values.valkey.image.pullPolicy }}
           ports:
             - name: client
               containerPort: 6379
@@ -45,14 +47,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           resources:
-            requests:
-              cpu: "50m"
-              memory: "128Mi"
-              ephemeral-storage: "64Mi"
-            limits:
-              cpu: "200m"
-              memory: "256Mi"
-              ephemeral-storage: "256Mi"
+            {{- toYaml .Values.valkey.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -69,3 +64,4 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+{{- end }}
